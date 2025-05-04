@@ -119,23 +119,60 @@ const server = Bun.serve({
        }
     }
 
-    // API: 列出当前工作目录下的子目录
+    // API: 列出指定相对路径下的子目录
     if (url.pathname === "/api/list-dirs" && req.method === "GET") {
       try {
         const currentWorkingDirectory = process.cwd();
-        const entries = await fs.readdir(currentWorkingDirectory, { withFileTypes: true });
+        const relativePathQuery = url.searchParams.get('relativePath') || '.'; // Default to current dir
+
+        // 解析目标路径并进行规范化
+        const targetPath = path.resolve(currentWorkingDirectory, relativePathQuery);
+
+        // --- 安全检查 ---
+        // 确保目标路径在当前工作目录或其子目录下
+        if (!targetPath.startsWith(currentWorkingDirectory)) {
+          console.warn(`目录遍历尝试被阻止: ${targetPath}`);
+          return Response.json({
+            error: "禁止访问",
+            message: "请求的路径超出允许范围。"
+          }, { status: 403 }); // Forbidden
+        }
+
+        // 检查路径是否存在且为目录
+        const stats = await fs.stat(targetPath);
+        if (!stats.isDirectory()) {
+           return Response.json({ error: "路径无效", message: "请求的路径不是一个有效的目录。" }, { status: 400 });
+        }
+        // --- 安全检查结束 ---
+
+        const entries = await fs.readdir(targetPath, { withFileTypes: true });
         const directories = entries
           .filter(dirent => dirent.isDirectory())
           .map(dirent => ({
             name: dirent.name,
-            path: path.join(currentWorkingDirectory, dirent.name) // Return full path
+            // 返回相对于 CWD 的路径，以便客户端可以再次请求
+            relativePath: path.relative(currentWorkingDirectory, path.join(targetPath, dirent.name)) || '.' 
           }));
-        
-        // Also include the current directory itself
-        directories.unshift({ name: ".", path: currentWorkingDirectory }); 
 
-        return Response.json({ directories, success: true });
+        // 计算父目录的相对路径 (如果不是 CWD)
+        let parentRelativePath = null;
+        if (targetPath !== currentWorkingDirectory) {
+           parentRelativePath = path.relative(currentWorkingDirectory, path.join(targetPath, '..')) || '.';
+        }
+
+        return Response.json({
+           directories,
+           currentAbsolutePath: targetPath, // 当前列出的目录的绝对路径
+           currentRelativePath: path.relative(currentWorkingDirectory, targetPath) || '.', // 当前列出的目录的相对路径
+           parentRelativePath: parentRelativePath, // 父目录的相对路径 (或 null)
+           success: true
+         });
+
       } catch (error) {
+        // 处理文件不存在等错误
+        if (error.code === 'ENOENT') {
+             return Response.json({ error: "路径无效", message: "请求的路径不存在。" }, { status: 404 });
+        }
         console.error("列出目录时出错:", error);
         return Response.json({
           error: "列出目录失败",
@@ -161,4 +198,4 @@ console.log("- GET  /api/config/read     - 读取配置");
 console.log("- POST /api/config/write    - 写入配置");
 console.log("- POST /api/config/reset    - 重置配置");
 console.log("- POST /api/select-path     - 获取当前工作目录"); // Updated description
-console.log("- GET  /api/list-dirs       - 列出当前目录下的子目录"); // New endpoint
+console.log("- GET  /api/list-dirs?relativePath=... - 列出指定相对路径下的子目录"); // Updated endpoint description

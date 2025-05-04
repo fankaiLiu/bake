@@ -13,7 +13,7 @@
     .section { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; position: relative; }
     h2 { margin-top: 0; }
     .tip { font-size: 0.9em; color: #0071e3; margin-left: 10px; display: inline-block; height: 1em; }
-    #output-dir-selector {
+    .dir-selector {
         display: none;
         position: absolute;
         background-color: white;
@@ -22,14 +22,17 @@
         max-height: 200px;
         overflow-y: auto;
         z-index: 10;
-        min-width: 200px;
+        min-width: 250px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         margin-top: 5px;
+        left: 15px;
     }
-    #output-dir-selector ul { list-style: none; padding: 0; margin: 0; }
-    #output-dir-selector li { padding: 5px 10px; cursor: pointer; }
-    #output-dir-selector li:hover { background-color: #f0f0f0; }
-    .path-container { margin-bottom: 10px; }
+    .dir-selector ul { list-style: none; padding: 0; margin: 0; }
+    .dir-selector li { padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+    .dir-selector li:hover { background-color: #f0f0f0; }
+    .dir-selector li.select-option { font-weight: bold; border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px; color: #0071e3; }
+    .dir-selector li.parent-option { color: #555; }
+    .path-container { margin-bottom: 10px; position: relative; }
   </style>
 </head>
 <body>
@@ -46,15 +49,15 @@
     <button onclick="addSqlPath()">添加 SQL 路径</button>
   </div>
 
-  <div class="section">
+  <div class="section" id="output-section">
     <h2>输出路径</h2>
     <div class="path-item">
       <input type="text" id="output-path" placeholder="请手动粘贴或点击右侧按钮选择目录...">
-      <button onclick="showDirectorySelector()">选择目录</button>
+      <button onclick="showDirectorySelector('.')">选择目录</button>
       <span class="tip" id="output-path-tip"></span>
     </div>
-    <div id="output-dir-selector"></div>
-    <p style="font-size: 0.9em; color: #666;">提示：您可以手动粘贴完整路径，或点击“选择目录”按钮从当前工作目录的子目录中选择。</p>
+    <div id="output-dir-selector" class="dir-selector"></div>
+    <p style="font-size: 0.9em; color: #666;">提示：您可以手动粘贴完整路径，或点击“选择目录”按钮浏览选择。</p>
   </div>
 
   <div>
@@ -68,6 +71,10 @@
       sqlPaths: [],
       outputPath: ""
     };
+
+    function simplePathJoin(...args) {
+        return args.filter(Boolean).join('/').replace(/\/+/g, '/').replace(/\/$/, '');
+    }
 
     function showTip(elementId, message, isError = false) {
         const tipElement = document.getElementById(elementId);
@@ -103,16 +110,22 @@
       config.sqlPaths.forEach((path, index) => {
         const containerDiv = document.createElement('div');
         containerDiv.className = 'path-container';
+        containerDiv.id = `sql-path-container-${index}`;
 
         const pathItem = document.createElement('div');
         pathItem.className = 'path-item';
         pathItem.innerHTML = `
-          <input type="text" value="${path}" placeholder="请手动粘贴 SQL 文件路径..." data-index="${index}" onchange="updateSqlPath(${index}, this.value)">
-          <button onclick="selectPath('file', 'sql', ${index})">获取当前目录</button>
+          <input type="text" id="sql-path-input-${index}" value="${path}" placeholder="请手动粘贴 SQL 文件路径或选择目录..." data-index="${index}" onchange="updateSqlPath(${index}, this.value)">
+          <button onclick="showSqlDirectorySelector(${index}, '.')">选择目录</button>
           <button onclick="removeSqlPath(${index})">删除</button>
           <span class="tip" id="sql-path-tip-${index}"></span>
         `;
+        const selectorDiv = document.createElement('div');
+        selectorDiv.id = `sql-dir-selector-${index}`;
+        selectorDiv.className = 'dir-selector';
+
         containerDiv.appendChild(pathItem);
+        containerDiv.appendChild(selectorDiv);
         sqlPathsContainer.appendChild(containerDiv);
       });
 
@@ -120,13 +133,14 @@
       outputPathInput.value = config.outputPath || '';
       outputPathInput.onchange = function() {
         config.outputPath = this.value;
-        hideDirectorySelector();
+        hideDirectorySelector('output-dir-selector');
       };
     }
 
     function updateSqlPath(index, value) {
       if (config.sqlPaths[index] !== undefined) {
         config.sqlPaths[index] = value;
+        hideDirectorySelector(`sql-dir-selector-${index}`);
       }
     }
 
@@ -142,76 +156,106 @@
       renderConfig();
     }
 
-    async function selectPath(type, target, index) {
-      clearTip(`sql-path-tip-${index}`);
-      try {
-        const response = await fetch('/api/select-path', { method: 'POST' });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
+    async function fetchAndDisplayDirs(selectorId, relativePath, onSelectCallback, tipId) {
+        clearTip(tipId);
+        const selectorElement = document.getElementById(selectorId);
+        if (!selectorElement) return;
 
-        if (result.success && result.path) {
-          if (target === 'sql') {
-            config.sqlPaths[index] = result.path;
-            renderConfig();
-            showTip(`sql-path-tip-${index}`, `已填入当前目录`);
-          }
-        } else {
-          throw new Error(result.error || '获取当前目录失败');
-        }
-      } catch (error) {
-        console.error('获取当前目录请求失败:', error);
-        showTip(`sql-path-tip-${index}`, '获取失败', true);
-      }
-    }
+        selectorElement.innerHTML = '<ul><li>正在加载...</li></ul>';
+        selectorElement.style.display = 'block';
 
-    const dirSelector = document.getElementById('output-dir-selector');
-    const outputPathInput = document.getElementById('output-path');
-
-    async function showDirectorySelector() {
-        clearTip('output-path-tip');
         try {
-            const response = await fetch('/api/list-dirs');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const response = await fetch(`/api/list-dirs?relativePath=${encodeURIComponent(relativePath)}`);
+            if (!response.ok) {
+                 const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+                 throw new Error(errorData.message || `HTTP error ${response.status}`);
+            }
             const result = await response.json();
 
-            if (result.success && result.directories) {
-                dirSelector.innerHTML = '';
+            if (result.success) {
+                selectorElement.innerHTML = '';
                 const ul = document.createElement('ul');
+
+                if (result.parentRelativePath !== null) {
+                    const li = document.createElement('li');
+                    li.textContent = '.. (上一级)';
+                    li.className = 'parent-option';
+                    li.onclick = (e) => {
+                        e.stopPropagation();
+                        fetchAndDisplayDirs(selectorId, result.parentRelativePath, onSelectCallback, tipId);
+                    };
+                    ul.appendChild(li);
+                }
+
+                const selectLi = document.createElement('li');
+                const displayPath = result.currentRelativePath === '.' ? '(当前工作目录)' : result.currentRelativePath;
+                selectLi.textContent = `选择此目录: ${displayPath}`;
+                selectLi.className = 'select-option';
+                selectLi.onclick = (e) => {
+                    e.stopPropagation();
+                    onSelectCallback(result.currentAbsolutePath);
+                    hideDirectorySelector(selectorId);
+                    showTip(tipId, '已选择目录');
+                };
+                ul.appendChild(selectLi);
 
                 result.directories.forEach(dir => {
                     const li = document.createElement('li');
-                    li.textContent = dir.name === '.' ? '.(当前目录)' : dir.name;
-                    li.dataset.path = dir.path;
-                    li.onclick = () => {
-                        outputPathInput.value = dir.path;
-                        config.outputPath = dir.path;
-                        hideDirectorySelector();
-                        showTip('output-path-tip', '已选择目录');
+                    li.textContent = dir.name;
+                    li.onclick = (e) => {
+                        e.stopPropagation();
+                        fetchAndDisplayDirs(selectorId, dir.relativePath, onSelectCallback, tipId);
                     };
                     ul.appendChild(li);
                 });
-                dirSelector.appendChild(ul);
-                dirSelector.style.display = 'block';
+
+                selectorElement.appendChild(ul);
+                selectorElement.style.display = 'block';
             } else {
                  throw new Error(result.error || '无法列出目录');
             }
         } catch (error) {
             console.error('列出目录失败:', error);
-            showTip('output-path-tip', '无法列出目录', true);
-            hideDirectorySelector();
+            showTip(tipId, `无法列出: ${error.message}`, true);
+            selectorElement.innerHTML = `<ul><li style="color:red;">错误: ${error.message}</li></ul>`;
         }
     }
 
-    function hideDirectorySelector() {
-        dirSelector.style.display = 'none';
+    function showDirectorySelector(relativePath) {
+        const selectorId = 'output-dir-selector';
+        const tipId = 'output-path-tip';
+        const onSelect = (selectedAbsolutePath) => {
+            const outputPathInput = document.getElementById('output-path');
+            outputPathInput.value = selectedAbsolutePath;
+            config.outputPath = selectedAbsolutePath;
+        };
+        fetchAndDisplayDirs(selectorId, relativePath, onSelect, tipId);
+    }
+
+    function showSqlDirectorySelector(index, relativePath) {
+        const selectorId = `sql-dir-selector-${index}`;
+        const tipId = `sql-path-tip-${index}`;
+        const onSelect = (selectedAbsolutePath) => {
+            const sqlPathInput = document.getElementById(`sql-path-input-${index}`);
+            sqlPathInput.value = selectedAbsolutePath;
+            updateSqlPath(index, selectedAbsolutePath);
+        };
+         fetchAndDisplayDirs(selectorId, relativePath, onSelect, tipId);
+    }
+
+    function hideDirectorySelector(selectorId) {
+        const selectorElement = document.getElementById(selectorId);
+        if (selectorElement) {
+            selectorElement.style.display = 'none';
+        }
     }
 
     document.addEventListener('click', function(event) {
-        const isClickInsideSelector = dirSelector.contains(event.target);
-        const isClickOnButton = event.target.matches('button[onclick^="showDirectorySelector"]');
+        const clickedSelector = event.target.closest('.dir-selector');
+        const clickedButton = event.target.closest('button[onclick^="showDirectorySelector"], button[onclick^="showSqlDirectorySelector"]');
 
-        if (!isClickInsideSelector && !isClickOnButton && dirSelector.style.display === 'block') {
-            hideDirectorySelector();
+        if (!clickedSelector && !clickedButton) {
+            document.querySelectorAll('.dir-selector').forEach(sel => sel.style.display = 'none');
         }
     });
 
