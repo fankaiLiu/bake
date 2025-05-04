@@ -4,14 +4,32 @@
   <title>配置</title>
   <style>
     body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    button { padding: 10px 15px; margin-right: 10px; }
+    button { padding: 10px 15px; margin-right: 10px; cursor: pointer; }
     .nav { margin-bottom: 20px; }
     .nav a { text-decoration: none; color: #0071e3; }
-    .path-item { display: flex; margin-bottom: 10px; align-items: center; }
-    .path-item input { flex-grow: 1; padding: 8px; margin-right: 10px; }
-    .path-item button { margin-left: 5px; }
-    .section { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+    .path-item { display: flex; margin-bottom: 5px; align-items: center; flex-wrap: wrap; }
+    .path-item input { flex-grow: 1; padding: 8px; margin-right: 10px; min-width: 250px; }
+    .path-item button { margin-left: 5px; margin-top: 5px; }
+    .section { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; position: relative; }
     h2 { margin-top: 0; }
+    .tip { font-size: 0.9em; color: #0071e3; margin-left: 10px; display: inline-block; height: 1em; }
+    #output-dir-selector {
+        display: none;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ccc;
+        padding: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        min-width: 200px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-top: 5px;
+    }
+    #output-dir-selector ul { list-style: none; padding: 0; margin: 0; }
+    #output-dir-selector li { padding: 5px 10px; cursor: pointer; }
+    #output-dir-selector li:hover { background-color: #f0f0f0; }
+    .path-container { margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -31,14 +49,18 @@
   <div class="section">
     <h2>输出路径</h2>
     <div class="path-item">
-      <input type="text" id="output-path" placeholder="选择输出目录..." readonly>
-      <button onclick="selectPath('directory', 'output')">浏览...</button>
+      <input type="text" id="output-path" placeholder="请手动粘贴或点击右侧按钮选择目录...">
+      <button onclick="showDirectorySelector()">选择目录</button>
+      <span class="tip" id="output-path-tip"></span>
     </div>
+    <div id="output-dir-selector"></div>
+    <p style="font-size: 0.9em; color: #666;">提示：您可以手动粘贴完整路径，或点击“选择目录”按钮从当前工作目录的子目录中选择。</p>
   </div>
 
   <div>
     <button onclick="saveConfig()">保存配置</button>
     <button onclick="resetConfig()">重置配置</button>
+    <span class="tip" id="save-reset-tip"></span>
   </div>
 
   <script>
@@ -47,116 +69,202 @@
       outputPath: ""
     };
 
-    // 初始化加载配置
+    function showTip(elementId, message, isError = false) {
+        const tipElement = document.getElementById(elementId);
+        if (tipElement) {
+            tipElement.textContent = message;
+            tipElement.style.color = isError ? '#d93025' : '#0071e3';
+            setTimeout(() => {
+                if (tipElement.textContent === message) {
+                   tipElement.textContent = '';
+                }
+            }, 5000);
+        }
+    }
+
     async function loadConfig() {
+      clearAllTips();
       try {
         const response = await fetch('/api/config/read');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         config = await response.json();
+        config.sqlPaths = Array.isArray(config.sqlPaths) ? config.sqlPaths : [];
+        config.outputPath = typeof config.outputPath === 'string' ? config.outputPath : '';
         renderConfig();
       } catch (error) {
         console.error('加载配置失败:', error);
-        alert('加载配置失败');
+        showTip('save-reset-tip', '加载配置失败', true);
       }
     }
 
-    // 渲染配置到界面
     function renderConfig() {
-      // 渲染 SQL 路径
       const sqlPathsContainer = document.getElementById('sql-paths-container');
       sqlPathsContainer.innerHTML = '';
-      
       config.sqlPaths.forEach((path, index) => {
+        const containerDiv = document.createElement('div');
+        containerDiv.className = 'path-container';
+
         const pathItem = document.createElement('div');
         pathItem.className = 'path-item';
         pathItem.innerHTML = `
-          <input type="text" value="${path}" readonly data-index="${index}">
-          <button onclick="selectPath('file', 'sql', ${index})">浏览...</button>
+          <input type="text" value="${path}" placeholder="请手动粘贴 SQL 文件路径..." data-index="${index}" onchange="updateSqlPath(${index}, this.value)">
+          <button onclick="selectPath('file', 'sql', ${index})">获取当前目录</button>
           <button onclick="removeSqlPath(${index})">删除</button>
+          <span class="tip" id="sql-path-tip-${index}"></span>
         `;
-        sqlPathsContainer.appendChild(pathItem);
+        containerDiv.appendChild(pathItem);
+        sqlPathsContainer.appendChild(containerDiv);
       });
 
-      // 渲染输出路径
-      document.getElementById('output-path').value = config.outputPath || '';
+      const outputPathInput = document.getElementById('output-path');
+      outputPathInput.value = config.outputPath || '';
+      outputPathInput.onchange = function() {
+        config.outputPath = this.value;
+        hideDirectorySelector();
+      };
     }
 
-    // 添加 SQL 路径
+    function updateSqlPath(index, value) {
+      if (config.sqlPaths[index] !== undefined) {
+        config.sqlPaths[index] = value;
+      }
+    }
+
     function addSqlPath() {
+      clearAllTips();
       config.sqlPaths.push('');
       renderConfig();
-      // 自动触发新添加路径的选择对话框
-      const newIndex = config.sqlPaths.length - 1;
-      selectPath('file', 'sql', newIndex);
     }
 
-    // 移除 SQL 路径
     function removeSqlPath(index) {
+      clearAllTips();
       config.sqlPaths.splice(index, 1);
       renderConfig();
     }
 
-    // 选择路径
     async function selectPath(type, target, index) {
+      clearTip(`sql-path-tip-${index}`);
       try {
-        const response = await fetch('/api/select-path', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type })
-        });
-        
+        const response = await fetch('/api/select-path', { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const result = await response.json();
-        
+
         if (result.success && result.path) {
           if (target === 'sql') {
             config.sqlPaths[index] = result.path;
-          } else if (target === 'output') {
-            config.outputPath = result.path;
+            renderConfig();
+            showTip(`sql-path-tip-${index}`, `已填入当前目录`);
           }
-          renderConfig();
         } else {
-          console.error('选择路径失败:', result.error || '未知错误');
-          alert('选择路径失败');
+          throw new Error(result.error || '获取当前目录失败');
         }
       } catch (error) {
-        console.error('选择路径请求失败:', error);
-        alert('选择路径请求失败');
+        console.error('获取当前目录请求失败:', error);
+        showTip(`sql-path-tip-${index}`, '获取失败', true);
       }
     }
 
-    // 保存配置
+    const dirSelector = document.getElementById('output-dir-selector');
+    const outputPathInput = document.getElementById('output-path');
+
+    async function showDirectorySelector() {
+        clearTip('output-path-tip');
+        try {
+            const response = await fetch('/api/list-dirs');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+
+            if (result.success && result.directories) {
+                dirSelector.innerHTML = '';
+                const ul = document.createElement('ul');
+
+                result.directories.forEach(dir => {
+                    const li = document.createElement('li');
+                    li.textContent = dir.name === '.' ? '.(当前目录)' : dir.name;
+                    li.dataset.path = dir.path;
+                    li.onclick = () => {
+                        outputPathInput.value = dir.path;
+                        config.outputPath = dir.path;
+                        hideDirectorySelector();
+                        showTip('output-path-tip', '已选择目录');
+                    };
+                    ul.appendChild(li);
+                });
+                dirSelector.appendChild(ul);
+                dirSelector.style.display = 'block';
+            } else {
+                 throw new Error(result.error || '无法列出目录');
+            }
+        } catch (error) {
+            console.error('列出目录失败:', error);
+            showTip('output-path-tip', '无法列出目录', true);
+            hideDirectorySelector();
+        }
+    }
+
+    function hideDirectorySelector() {
+        dirSelector.style.display = 'none';
+    }
+
+    document.addEventListener('click', function(event) {
+        const isClickInsideSelector = dirSelector.contains(event.target);
+        const isClickOnButton = event.target.matches('button[onclick^="showDirectorySelector"]');
+
+        if (!isClickInsideSelector && !isClickOnButton && dirSelector.style.display === 'block') {
+            hideDirectorySelector();
+        }
+    });
+
     async function saveConfig() {
+      clearAllTips();
+      config.outputPath = document.getElementById('output-path').value;
+
       try {
-        await fetch('/api/config/write', {
+        const response = await fetch('/api/config/write', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(config)
         });
-        alert('配置已保存');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        if (result.success) {
+           showTip('save-reset-tip', '配置已保存');
+        } else {
+           throw new Error(result.error || '保存配置失败');
+        }
       } catch (error) {
         console.error('保存配置失败:', error);
-        alert('保存配置失败');
+        showTip('save-reset-tip', `保存失败: ${error.message}`, true);
       }
     }
 
-    // 重置配置
     async function resetConfig() {
+      clearAllTips();
       if (confirm('确定要重置所有配置吗？')) {
         try {
-          const response = await fetch('/api/config/reset', {
-            method: 'POST'
-          });
+          const response = await fetch('/api/config/reset', { method: 'POST' });
+           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           config = await response.json();
           renderConfig();
-          alert('配置已重置');
+          showTip('save-reset-tip', '配置已重置');
         } catch (error) {
           console.error('重置配置失败:', error);
-          alert('重置配置失败');
+          showTip('save-reset-tip', '重置失败', true);
         }
       }
     }
 
-    // 页面加载时读取配置
+    function clearTip(elementId) {
+        const tipElement = document.getElementById(elementId);
+        if (tipElement) tipElement.textContent = '';
+    }
+
+    function clearAllTips() {
+        document.querySelectorAll('.tip').forEach(tip => tip.textContent = '');
+    }
+
     loadConfig();
   </script>
 </body>
 </html>
+

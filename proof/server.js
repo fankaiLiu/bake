@@ -1,7 +1,12 @@
 // server.js
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
+
+//运行在每个用户的电脑上，不是运行在服务器上，所以可以读取到文件
+//运行在每个用户的电脑上，不是运行在服务器上，所以可以读取到文件
+//运行在每个用户的电脑上，不是运行在服务器上，所以可以读取到文件
+
+import process from 'process'; // 导入 process 模块以获取 cwd
+import fs from 'fs/promises'; // Import fs promises for directory reading
+import path from 'path'; // Import path for joining paths
 
 // 默认配置
 const DEFAULT_CONFIG = {
@@ -25,67 +30,6 @@ function logRequest(url, method) {
   console.log(`接收到请求: ${method} ${url}`);
 }
 
-// 使用AppleScript选择文件或目录 (macOS)
-async function selectPathMacOS(type) {
-  return new Promise((resolve, reject) => {
-    let script;
-    if (type === 'directory') {
-      script = 'choose folder with prompt "请选择一个目录"';
-    } else {
-      script = 'choose file with prompt "请选择一个SQL文件" of type {"sql"}';
-    }
-    
-    const osascript = spawn('osascript', ['-e', script]);
-    let stdout = '';
-    let stderr = '';
-    
-    osascript.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    osascript.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    osascript.on('close', (code) => {
-      if (code === 0) {
-        // AppleScript 返回的是类似 "alias Macintosh HD:Users:username:path:to:file"
-        // 需要转换成标准路径
-        const path = stdout.trim()
-          .replace(/^alias /i, '')
-          .replace(/:/g, '/')
-          .replace(/^Macintosh HD/, '');
-        resolve(`/${path}`);
-      } else {
-        // 用户可能取消了选择
-        reject(new Error(stderr || '用户取消了选择'));
-      }
-    });
-  });
-}
-
-// 跨平台选择路径
-async function selectPath(type) {
-  // 检测操作系统
-  const platform = process.platform;
-  
-  try {
-    if (platform === 'darwin') {
-      // macOS
-      return await selectPathMacOS(type);
-    } else if (platform === 'win32') {
-      // Windows - 这里需要实现Windows的路径选择
-      throw new Error('Windows系统的路径选择功能尚未实现');
-    } else {
-      // Linux 等其他系统
-      throw new Error('当前系统的路径选择功能尚未实现');
-    }
-  } catch (error) {
-    console.error(`选择路径错误: ${error.message}`);
-    throw error;
-  }
-}
-
 const server = Bun.serve({
   port: 3000,
   async fetch(req) {
@@ -94,11 +38,10 @@ const server = Bun.serve({
     
     // 提供静态HTML
     if (url.pathname === "/" || url.pathname === "") {
-      return new Response(Bun.file("index.html"));
+      return new Response(Bun.file("proof/index.html"));
     }
-    
     if (url.pathname === "/config.html") {
-      return new Response(Bun.file("config.html"));
+      return new Response(Bun.file("proof/config.html"));
     }
     
     // 处理其他静态文件
@@ -141,6 +84,12 @@ const server = Bun.serve({
     // 配置写入 API
     if (url.pathname === "/api/config/write" && req.method === "POST") {
       const config = await req.json();
+      // Basic validation: ensure paths are strings
+      if (!Array.isArray(config.sqlPaths) || typeof config.outputPath !== 'string') {
+         return Response.json({ success: false, error: "Invalid config format" }, { status: 400 });
+      }
+      config.sqlPaths = config.sqlPaths.filter(p => typeof p === 'string'); // Ensure all sqlPaths are strings
+
       await Bun.write("bake_config.json", JSON.stringify(config, null, 2));
       return Response.json({ success: true });
     }
@@ -152,35 +101,45 @@ const server = Bun.serve({
         headers: { "Content-Type": "application/json" }
       });
     }
-    
-    // 路径选择 API
+
+    // API: 获取当前工作目录 (简化)
     if (url.pathname === "/api/select-path" && req.method === "POST") {
+       try {
+         const currentWorkingDirectory = process.cwd();
+         return Response.json({
+           path: currentWorkingDirectory,
+           success: true
+         });
+       } catch (error) {
+         console.error("获取当前工作目录时出错:", error);
+         return Response.json({
+           error: "获取当前工作目录失败",
+           message: error.message
+         }, { status: 500 });
+       }
+    }
+
+    // API: 列出当前工作目录下的子目录
+    if (url.pathname === "/api/list-dirs" && req.method === "GET") {
       try {
-        // 解析请求体
-        const data = await req.json();
-        console.log("路径选择请求:", data);
+        const currentWorkingDirectory = process.cwd();
+        const entries = await fs.readdir(currentWorkingDirectory, { withFileTypes: true });
+        const directories = entries
+          .filter(dirent => dirent.isDirectory())
+          .map(dirent => ({
+            name: dirent.name,
+            path: path.join(currentWorkingDirectory, dirent.name) // Return full path
+          }));
         
-        // 调用系统文件选择对话框
-        try {
-          const selectedPath = await selectPath(data.type);
-          return Response.json({ 
-            path: selectedPath,
-            success: true
-          });
-        } catch (error) {
-          console.error("文件选择错误:", error.message);
-          // 用户可能取消了选择，这不是服务器错误
-          return Response.json({ 
-            success: false,
-            error: "路径选择被取消或失败",
-            message: error.message 
-          });
-        }
+        // Also include the current directory itself
+        directories.unshift({ name: ".", path: currentWorkingDirectory }); 
+
+        return Response.json({ directories, success: true });
       } catch (error) {
-        console.error("处理路径选择请求时出错:", error);
-        return Response.json({ 
-          error: "处理请求失败", 
-          message: error.message 
+        console.error("列出目录时出错:", error);
+        return Response.json({
+          error: "列出目录失败",
+          message: error.message
         }, { status: 500 });
       }
     }
@@ -188,6 +147,10 @@ const server = Bun.serve({
     // 处理所有其他请求
     console.log(`未找到路由: ${url.pathname}`);
     return new Response("Not Found", { status: 404 });
+  },
+  error(error) { // Add basic error handling for the server itself
+      console.error("服务器错误:", error);
+      return new Response("Internal Server Error", { status: 500 });
   },
 });
 
@@ -197,4 +160,5 @@ console.log("- GET  /api/health-check    - 健康检查");
 console.log("- GET  /api/config/read     - 读取配置");
 console.log("- POST /api/config/write    - 写入配置");
 console.log("- POST /api/config/reset    - 重置配置");
-console.log("- POST /api/select-path     - 选择路径");
+console.log("- POST /api/select-path     - 获取当前工作目录"); // Updated description
+console.log("- GET  /api/list-dirs       - 列出当前目录下的子目录"); // New endpoint
