@@ -65,7 +65,7 @@
     <button onclick="saveConfig()">保存配置</button>
     <button onclick="resetConfig()">重置配置</button>
     <span class="tip" id="save-reset-tip"></span>
-    <span class="tip" id="unsaved-changes-tip" style="color: orange; margin-left: 10px; display: none;">有未保存的更改</span>
+    <span class="tip" id="unsaved-changes-tip" style="color: orange; margin-left: 10px;">有未保存的更改</span>
   </div>
 
   <script>
@@ -98,15 +98,24 @@
         hasUnsavedChanges = unsaved;
         const tipElement = document.getElementById('unsaved-changes-tip');
         if (tipElement) {
-            tipElement.style.display = unsaved ? 'inline' : 'none';
+            tipElement.style.display = unsaved ? 'inline-block' : 'none';
+            console.log(`Tip element display set to: ${tipElement.style.display}`);
+        } else {
+            console.error("未找到unsaved-changes-tip元素！");
         }
     }
 
     function markUnsavedChanges() {
         console.log("Marking unsaved changes.");
-        if (!hasUnsavedChanges) {
-             updateUnsavedChangesStatus(true);
-        }
+        updateUnsavedChangesStatus(true);
+        // 确保DOM更新
+        setTimeout(() => {
+            const tipElement = document.getElementById('unsaved-changes-tip');
+            if (tipElement && window.getComputedStyle(tipElement).display === 'none') {
+                console.warn("警告：未保存提示元素仍然是隐藏的!");
+                tipElement.style.display = 'inline-block';
+            }
+        }, 100);
     }
 
     async function fetchAndDisplayCwd() {
@@ -267,6 +276,7 @@
                     onSelectCallback(result.currentAbsolutePath);
                     hideDirectorySelector(selectorId);
                     showTip(tipId, '已选择目录');
+                    markUnsavedChanges(); // 添加此行，选择目录后标记为有未保存的更改
                 };
                 ul.appendChild(selectLi);
 
@@ -380,7 +390,9 @@
 
     function clearTip(elementId) {
         const tipElement = document.getElementById(elementId);
-        if (tipElement) tipElement.textContent = '';
+        if (tipElement) {
+            tipElement.textContent = '';
+        }
     }
 
     function clearAllTips() {
