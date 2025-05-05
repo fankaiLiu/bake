@@ -1,4 +1,6 @@
 {
-  "sqlPaths": [],
-  "outputPath": ""
+  "sqlPaths": [
+    "/Users/liufankai/code/bake/api"
+  ],
+  "outputPath": "/Users/liufankai/code/bake/test1"
 }
