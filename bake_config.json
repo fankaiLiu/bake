@@ -1,6 +1,6 @@
 {
   "sqlPaths": [
-    "/Users/liufankai/code/bake/proof"
+    "proof"
   ],
-  "outputPath": "/Users/liufankai/code/bake/test1/test12"
+  "outputPath": "test1/test12"
 }

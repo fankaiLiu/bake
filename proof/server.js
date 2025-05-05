@@ -88,7 +88,25 @@ const server = Bun.serve({
       if (!Array.isArray(config.sqlPaths) || typeof config.outputPath !== 'string') {
          return Response.json({ success: false, error: "Invalid config format" }, { status: 400 });
       }
-      config.sqlPaths = config.sqlPaths.filter(p => typeof p === 'string'); // Ensure all sqlPaths are strings
+      
+      const currentWorkingDirectory = process.cwd();
+      
+      // 将所有路径转换为相对路径
+      const convertToRelativePath = (absolutePath) => {
+        if (!absolutePath) return "";
+        // 如果路径已经是相对路径，直接返回
+        if (!path.isAbsolute(absolutePath)) return absolutePath;
+        // 将绝对路径转换为相对路径
+        return path.relative(currentWorkingDirectory, absolutePath);
+      };
+      
+      // 转换sqlPaths中的所有路径
+      config.sqlPaths = config.sqlPaths
+        .filter(p => typeof p === 'string')
+        .map(convertToRelativePath);
+      
+      // 转换outputPath
+      config.outputPath = convertToRelativePath(config.outputPath);
 
       await Bun.write("bake_config.json", JSON.stringify(config, null, 2));
       return Response.json({ success: true });

@@ -156,6 +156,51 @@
       font-size: 0.9em;
       margin-bottom: 20px;
     }
+    .path-display {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .path-label {
+      font-weight: 500;
+      min-width: 80px;
+    }
+    .relative-path {
+      color: #0071e3;
+      background-color: #e8f0fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      margin-left: 6px;
+    }
+    .path-mode-switch {
+      margin-left: 10px;
+      font-size: 0.85em;
+      color: #555;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .path-mode-container {
+      display: flex;
+      align-items: center;
+      background-color: #f3f4f6;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      justify-content: space-between;
+    }
+    .path-mode-info {
+      display: flex;
+      align-items: center;
+    }
+    .path-mode-badge {
+      background-color: #0071e3;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -164,6 +209,15 @@
   </div>
   <h1>配置</h1>
   <div id="cwd-display" style="margin-bottom: 15px; font-size: 0.9em; color: #555;">当前工作目录: <span id="cwd-path">加载中...</span></div>
+  
+  <!-- 添加路径模式切换按钮到页面顶部 -->
+  <div class="path-mode-container">
+    <div class="path-mode-info">
+      <span>当前路径显示模式:</span>
+      <span class="path-mode-badge" id="current-path-mode">相对路径</span>
+    </div>
+    <button onclick="togglePathDisplayMode()" id="path-mode-toggle-btn">切换为绝对路径</button>
+  </div>
 
   <div class="section">
     <h2>SQL 文件路径</h2>
@@ -198,9 +252,56 @@
     };
     let initialConfigState = {};
     let serverConfigState = {}; // 存储服务器上的最新配置
+    let cwdPath = ""; // 存储当前工作目录
+    let showAbsolutePaths = false; // 默认显示相对路径
 
     function simplePathJoin(...args) {
         return args.filter(Boolean).join('/').replace(/\/+/g, '/').replace(/\/$/, '');
+    }
+
+    // 将绝对路径转换为相对路径
+    function toRelativePath(absolutePath) {
+        if (!absolutePath || !cwdPath || !path.isAbsolute(absolutePath)) return absolutePath;
+        try {
+            return path.relative(cwdPath, absolutePath) || '.';
+        } catch (e) {
+            console.error('转换相对路径出错:', e);
+            return absolutePath;
+        }
+    }
+
+    // 将相对路径转换为绝对路径
+    function toAbsolutePath(relativePath) {
+        if (!relativePath || !cwdPath) return relativePath;
+        if (path.isAbsolute(relativePath)) return relativePath;
+        try {
+            return path.resolve(cwdPath, relativePath);
+        } catch (e) {
+            console.error('转换绝对路径出错:', e);
+            return relativePath;
+        }
+    }
+
+    // 根据显示模式获取显示路径
+    function getDisplayPath(path) {
+        return showAbsolutePaths ? toAbsolutePath(path) : path;
+    }
+
+    function togglePathDisplayMode() {
+        showAbsolutePaths = !showAbsolutePaths;
+        
+        // 更新UI显示
+        const modeText = document.getElementById('current-path-mode');
+        if (modeText) {
+            modeText.textContent = showAbsolutePaths ? '绝对路径' : '相对路径';
+        }
+        
+        const toggleBtn = document.getElementById('path-mode-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.textContent = showAbsolutePaths ? '切换为相对路径' : '切换为绝对路径';
+        }
+        
+        renderConfig();
     }
 
     function showTip(elementId, message, isError = false) {
@@ -217,7 +318,6 @@
     }
 
     function markChanges() {
-        // 只比较与服务器配置的差异
         compareWithServerConfig();
     }
 
@@ -228,6 +328,7 @@
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
             if (result.success && result.path) {
+                cwdPath = result.path;
                 cwdPathElement.textContent = result.path;
             } else {
                 throw new Error(result.error || '无法获取当前工作目录');
@@ -248,7 +349,6 @@
         config.sqlPaths = Array.isArray(config.sqlPaths) ? config.sqlPaths : [];
         config.outputPath = typeof config.outputPath === 'string' ? config.outputPath : '';
         
-        // 保存服务器版本的配置
         serverConfigState = {
           sqlPaths: [...config.sqlPaths],
           outputPath: config.outputPath
@@ -257,7 +357,6 @@
         initialConfigState = JSON.stringify(config);
         renderConfig();
         
-        // 隐藏服务器差异提示
         const serverDiffTip = document.getElementById('server-diff-tip');
         if (serverDiffTip) {
           serverDiffTip.style.display = 'none';
@@ -271,6 +370,7 @@
     function renderConfig() {
       const sqlPathsContainer = document.getElementById('sql-paths-container');
       sqlPathsContainer.innerHTML = '';
+      
       config.sqlPaths.forEach((path, index) => {
         const containerDiv = document.createElement('div');
         containerDiv.className = 'path-container';
@@ -278,8 +378,11 @@
 
         const pathItem = document.createElement('div');
         pathItem.className = 'path-item';
+        
+        const displayPath = getDisplayPath(path);
+        
         pathItem.innerHTML = `
-          <input type="text" id="sql-path-input-${index}" value="${path}" placeholder="请手动粘贴 SQL 文件路径或选择目录..." data-index="${index}" oninput="handleSqlPathInput(${index}, this.value)" onchange="handleSqlPathChange(${index}, this.value)">
+          <input type="text" id="sql-path-input-${index}" value="${displayPath}" placeholder="请手动粘贴 SQL 文件路径或选择目录..." data-index="${index}" oninput="handleSqlPathInput(${index}, this.value)" onchange="handleSqlPathChange(${index}, this.value)">
           <button onclick="showSqlDirectorySelector(${index}, '.')">选择目录</button>
           <button onclick="removeSqlPath(${index})">删除</button>
           <span class="tip" id="sql-path-tip-${index}"></span>
@@ -294,31 +397,49 @@
       });
 
       const outputPathInput = document.getElementById('output-path');
-      outputPathInput.value = config.outputPath || '';
+      outputPathInput.value = getDisplayPath(config.outputPath) || '';
       outputPathInput.oninput = handleOutputPathInput;
       outputPathInput.onchange = handleOutputPathChange;
     }
 
     function handleSqlPathInput(index, value) {
         if (config.sqlPaths[index] !== undefined) {
-            config.sqlPaths[index] = value;
+            if (showAbsolutePaths && path.isAbsolute(value)) {
+                config.sqlPaths[index] = toRelativePath(value);
+            } else {
+                config.sqlPaths[index] = value;
+            }
             markChanges();
         }
     }
+    
     function handleSqlPathChange(index, value) {
          if (config.sqlPaths[index] !== undefined) {
-            config.sqlPaths[index] = value;
+            if (showAbsolutePaths && path.isAbsolute(value)) {
+                config.sqlPaths[index] = toRelativePath(value);
+            } else {
+                config.sqlPaths[index] = value;
+            }
             hideDirectorySelector(`sql-dir-selector-${index}`);
             markChanges();
         }
     }
 
     function handleOutputPathInput() {
-        config.outputPath = this.value;
+        if (showAbsolutePaths && path.isAbsolute(this.value)) {
+            config.outputPath = toRelativePath(this.value);
+        } else {
+            config.outputPath = this.value;
+        }
         markChanges();
     }
+    
     function handleOutputPathChange() {
-        config.outputPath = this.value;
+        if (showAbsolutePaths && path.isAbsolute(this.value)) {
+            config.outputPath = toRelativePath(this.value);
+        } else {
+            config.outputPath = this.value;
+        }
         hideDirectorySelector('output-dir-selector');
         markChanges();
     }
@@ -326,9 +447,15 @@
     function updateSqlPath(index, value) {
       if (config.sqlPaths[index] !== undefined) {
         console.log(`Updating SQL path ${index} programmatically to: ${value}`);
-        config.sqlPaths[index] = value;
+        
+        const relativePath = toRelativePath(value);
+        config.sqlPaths[index] = relativePath;
+        
+        const displayPath = showAbsolutePaths ? value : relativePath;
+        
         const inputElement = document.getElementById(`sql-path-input-${index}`);
-        if (inputElement) inputElement.value = value;
+        if (inputElement) inputElement.value = displayPath;
+        
         hideDirectorySelector(`sql-dir-selector-${index}`);
         markChanges();
       }
@@ -419,9 +546,15 @@
         const tipId = 'output-path-tip';
         const onSelect = (selectedAbsolutePath) => {
             console.log(`Output directory selected: ${selectedAbsolutePath}`);
+            
+            const relativePath = toRelativePath(selectedAbsolutePath);
+            config.outputPath = relativePath;
+            
             const outputPathInput = document.getElementById('output-path');
-            outputPathInput.value = selectedAbsolutePath;
-            handleOutputPathChange.call(outputPathInput);
+            outputPathInput.value = showAbsolutePaths ? selectedAbsolutePath : relativePath;
+            
+            hideDirectorySelector(selectorId);
+            markChanges();
         };
         fetchAndDisplayDirs(selectorId, relativePath, onSelect, tipId);
     }
@@ -433,7 +566,7 @@
             console.log(`SQL directory ${index} selected: ${selectedAbsolutePath}`);
             updateSqlPath(index, selectedAbsolutePath);
         };
-         fetchAndDisplayDirs(selectorId, relativePath, onSelect, tipId);
+        fetchAndDisplayDirs(selectorId, relativePath, onSelect, tipId);
     }
 
     function hideDirectorySelector(selectorId) {
@@ -470,13 +603,11 @@
            showTip('save-reset-tip', '配置已保存');
            initialConfigState = JSON.stringify(config);
            
-           // 更新服务器配置状态
            serverConfigState = {
              sqlPaths: [...config.sqlPaths],
              outputPath: config.outputPath
            };
            
-           // 隐藏服务器差异提示
            const serverDiffTip = document.getElementById('server-diff-tip');
            if (serverDiffTip) {
              serverDiffTip.style.display = 'none';
@@ -502,13 +633,11 @@
           renderConfig();
           showTip('save-reset-tip', '配置已重置');
           
-          // 更新服务器配置状态
           serverConfigState = {
             sqlPaths: [...config.sqlPaths],
             outputPath: config.outputPath
           };
           
-          // 隐藏服务器差异提示
           const serverDiffTip = document.getElementById('server-diff-tip');
           if (serverDiffTip) {
             serverDiffTip.style.display = 'none';
@@ -534,13 +663,11 @@
     function compareWithServerConfig() {
       const tipElement = document.getElementById('server-diff-tip');
       
-      // 准备当前配置的副本用于比较
       const currentConfig = {
         sqlPaths: [...config.sqlPaths],
         outputPath: config.outputPath
       };
       
-      // 将当前配置与服务器配置进行比较
       const currentStr = JSON.stringify(currentConfig);
       const serverStr = JSON.stringify(serverConfigState);
       
@@ -554,11 +681,37 @@
       }
     }
 
+    const path = {
+        isAbsolute: function(p) {
+            return p.startsWith('/') || /^[A-Za-z]:/.test(p);
+        },
+        relative: function(from, to) {
+            if (!this.isAbsolute(from) || !this.isAbsolute(to)) return to;
+            
+            const fromParts = from.split(/[\/\\]/).filter(Boolean);
+            const toParts = to.split(/[\/\\]/).filter(Boolean);
+            
+            let i = 0;
+            for (; i < Math.min(fromParts.length, toParts.length); i++) {
+                if (fromParts[i] !== toParts[i]) break;
+            }
+            
+            const upCount = fromParts.length - i;
+            const relativeParts = Array(upCount).fill('..').concat(toParts.slice(i));
+            
+            return relativeParts.join('/') || '.';
+        },
+        resolve: function(from, to) {
+            if (this.isAbsolute(to)) return to;
+            
+            return from.replace(/\/?$/, '/') + to;
+        }
+    };
+
     fetchAndDisplayCwd();
     loadConfig();
 
     window.addEventListener('beforeunload', (event) => {
-      // 检查配置是否与服务器配置不同
       const currentConfig = {
         sqlPaths: [...config.sqlPaths],
         outputPath: config.outputPath
