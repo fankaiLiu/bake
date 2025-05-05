@@ -65,7 +65,7 @@
     <button onclick="saveConfig()">保存配置</button>
     <button onclick="resetConfig()">重置配置</button>
     <span class="tip" id="save-reset-tip"></span>
-    <span class="tip" id="unsaved-changes-tip" style="color: orange; margin-left: 10px;">有未保存的更改</span>
+    <span id="server-diff-tip" style="color: #3949ab; font-weight: bold; margin-left: 10px; background-color: #e8eaf6; padding: 3px 8px; border-radius: 4px; border: 1px solid #9fa8da; display: none;">与配置文件不同步，清保存</span>
   </div>
 
   <script>
@@ -73,8 +73,8 @@
       sqlPaths: [],
       outputPath: ""
     };
-    let hasUnsavedChanges = false;
     let initialConfigState = {};
+    let serverConfigState = {}; // 存储服务器上的最新配置
 
     function simplePathJoin(...args) {
         return args.filter(Boolean).join('/').replace(/\/+/g, '/').replace(/\/$/, '');
@@ -93,29 +93,9 @@
         }
     }
 
-    function updateUnsavedChangesStatus(unsaved) {
-        console.log(`Updating unsaved status to: ${unsaved}`);
-        hasUnsavedChanges = unsaved;
-        const tipElement = document.getElementById('unsaved-changes-tip');
-        if (tipElement) {
-            tipElement.style.display = unsaved ? 'inline-block' : 'none';
-            console.log(`Tip element display set to: ${tipElement.style.display}`);
-        } else {
-            console.error("未找到unsaved-changes-tip元素！");
-        }
-    }
-
-    function markUnsavedChanges() {
-        console.log("Marking unsaved changes.");
-        updateUnsavedChangesStatus(true);
-        // 确保DOM更新
-        setTimeout(() => {
-            const tipElement = document.getElementById('unsaved-changes-tip');
-            if (tipElement && window.getComputedStyle(tipElement).display === 'none') {
-                console.warn("警告：未保存提示元素仍然是隐藏的!");
-                tipElement.style.display = 'inline-block';
-            }
-        }, 100);
+    function markChanges() {
+        // 只比较与服务器配置的差异
+        compareWithServerConfig();
     }
 
     async function fetchAndDisplayCwd() {
@@ -144,10 +124,21 @@
         config = await response.json();
         config.sqlPaths = Array.isArray(config.sqlPaths) ? config.sqlPaths : [];
         config.outputPath = typeof config.outputPath === 'string' ? config.outputPath : '';
+        
+        // 保存服务器版本的配置
+        serverConfigState = {
+          sqlPaths: [...config.sqlPaths],
+          outputPath: config.outputPath
+        };
+        
         initialConfigState = JSON.stringify(config);
         renderConfig();
-        updateUnsavedChangesStatus(false);
-        console.log("Config loaded, unsaved status reset.");
+        
+        // 隐藏服务器差异提示
+        const serverDiffTip = document.getElementById('server-diff-tip');
+        if (serverDiffTip) {
+          serverDiffTip.style.display = 'none';
+        }
       } catch (error) {
         console.error('加载配置失败:', error);
         showTip('save-reset-tip', '加载配置失败', true);
@@ -188,25 +179,25 @@
     function handleSqlPathInput(index, value) {
         if (config.sqlPaths[index] !== undefined) {
             config.sqlPaths[index] = value;
-            markUnsavedChanges();
+            markChanges();
         }
     }
     function handleSqlPathChange(index, value) {
          if (config.sqlPaths[index] !== undefined) {
             config.sqlPaths[index] = value;
             hideDirectorySelector(`sql-dir-selector-${index}`);
-            markUnsavedChanges();
+            markChanges();
         }
     }
 
     function handleOutputPathInput() {
         config.outputPath = this.value;
-        markUnsavedChanges();
+        markChanges();
     }
     function handleOutputPathChange() {
         config.outputPath = this.value;
         hideDirectorySelector('output-dir-selector');
-        markUnsavedChanges();
+        markChanges();
     }
 
     function updateSqlPath(index, value) {
@@ -216,7 +207,7 @@
         const inputElement = document.getElementById(`sql-path-input-${index}`);
         if (inputElement) inputElement.value = value;
         hideDirectorySelector(`sql-dir-selector-${index}`);
-        markUnsavedChanges();
+        markChanges();
       }
     }
 
@@ -224,16 +215,14 @@
       clearAllTips();
       config.sqlPaths.push('');
       renderConfig();
-      markUnsavedChanges();
-      console.log("Added SQL path, marked unsaved.");
+      markChanges();
     }
 
     function removeSqlPath(index) {
       clearAllTips();
       config.sqlPaths.splice(index, 1);
       renderConfig();
-      markUnsavedChanges();
-      console.log(`Removed SQL path ${index}, marked unsaved.`);
+      markChanges();
     }
 
     async function fetchAndDisplayDirs(selectorId, relativePath, onSelectCallback, tipId) {
@@ -276,7 +265,7 @@
                     onSelectCallback(result.currentAbsolutePath);
                     hideDirectorySelector(selectorId);
                     showTip(tipId, '已选择目录');
-                    markUnsavedChanges(); // 添加此行，选择目录后标记为有未保存的更改
+                    markChanges();
                 };
                 ul.appendChild(selectLi);
 
@@ -357,8 +346,18 @@
         if (result.success) {
            showTip('save-reset-tip', '配置已保存');
            initialConfigState = JSON.stringify(config);
-           updateUnsavedChangesStatus(false);
-           console.log("Config saved successfully, unsaved status reset.");
+           
+           // 更新服务器配置状态
+           serverConfigState = {
+             sqlPaths: [...config.sqlPaths],
+             outputPath: config.outputPath
+           };
+           
+           // 隐藏服务器差异提示
+           const serverDiffTip = document.getElementById('server-diff-tip');
+           if (serverDiffTip) {
+             serverDiffTip.style.display = 'none';
+           }
         } else {
            throw new Error(result.error || '保存配置失败');
         }
@@ -379,8 +378,18 @@
           initialConfigState = JSON.stringify(config);
           renderConfig();
           showTip('save-reset-tip', '配置已重置');
-          updateUnsavedChangesStatus(false);
-          console.log("Config reset successfully, unsaved status reset.");
+          
+          // 更新服务器配置状态
+          serverConfigState = {
+            sqlPaths: [...config.sqlPaths],
+            outputPath: config.outputPath
+          };
+          
+          // 隐藏服务器差异提示
+          const serverDiffTip = document.getElementById('server-diff-tip');
+          if (serverDiffTip) {
+            serverDiffTip.style.display = 'none';
+          }
         } catch (error) {
           console.error('重置配置失败:', error);
           showTip('save-reset-tip', '重置失败', true);
@@ -399,11 +408,42 @@
         document.querySelectorAll('.tip').forEach(tip => tip.textContent = '');
     }
 
+    function compareWithServerConfig() {
+      const tipElement = document.getElementById('server-diff-tip');
+      
+      // 准备当前配置的副本用于比较
+      const currentConfig = {
+        sqlPaths: [...config.sqlPaths],
+        outputPath: config.outputPath
+      };
+      
+      // 将当前配置与服务器配置进行比较
+      const currentStr = JSON.stringify(currentConfig);
+      const serverStr = JSON.stringify(serverConfigState);
+      
+      console.log("与服务器配置比较:", 
+                  currentStr === serverStr ? "相同" : "不同");
+      
+      if (currentStr !== serverStr && tipElement) {
+        tipElement.style.display = 'inline-block';
+      } else if (tipElement) {
+        tipElement.style.display = 'none';
+      }
+    }
+
     fetchAndDisplayCwd();
     loadConfig();
 
     window.addEventListener('beforeunload', (event) => {
-      if (hasUnsavedChanges) {
+      // 检查配置是否与服务器配置不同
+      const currentConfig = {
+        sqlPaths: [...config.sqlPaths],
+        outputPath: config.outputPath
+      };
+      const currentStr = JSON.stringify(currentConfig);
+      const serverStr = JSON.stringify(serverConfigState);
+      
+      if (currentStr !== serverStr) {
         event.preventDefault();
         event.returnValue = '';
       }
