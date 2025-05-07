@@ -4,6 +4,11 @@
 <head>
   <title>SQL Code Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -40,7 +45,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <h2 class="text-xl font-semibold mb-4">需求输入</h2>
         <textarea id="requirements" 
-                  class="w-full h-36 p-4 mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
+                  class="w-full h-48 p-4 mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
                   placeholder="请输入您的SQL需求..."></textarea>
         <div class="flex gap-3">
           <button id="generateBtn" onclick="generateCode()" 
@@ -52,7 +57,7 @@
     </div>
 
     <!-- Right Panel -->
-    <div class="flex-1 p-8 overflow-y-auto">
+    <div class="flex-1 p-4 overflow-y-auto">
       <div id="resultSection" class="hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <h2 class="text-xl font-semibold mb-4">生成结果</h2>
         
@@ -95,6 +100,16 @@
       document.getElementById('generateBtn').disabled = false;
     }
 
+    function getLanguageClass(filePath) {
+      const ext = filePath.split('.').pop().toLowerCase();
+      switch (ext) {
+        case 'rs': return 'language-rust';
+        case 'ts': return 'language-typescript';
+        case 'sql': return 'language-sql';
+        default: return 'language-plaintext';
+      }
+    }
+
     async function generateCode() {
       const requirements = document.getElementById('requirements').value;
       showLoading();
@@ -135,10 +150,11 @@
 
         const contentDiv = document.createElement('div');
         contentDiv.className = `tab-content ${index === 0 ? 'block' : 'hidden'}`;
+        const languageClass = getLanguageClass(filePath);
         contentDiv.innerHTML = `
           <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
             <h3 class="text-lg font-medium text-apple-blue mb-2">${filePath}</h3>
-            <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto max-h-[400px] overflow-y-auto">${content}</pre>
+            <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto max-h-[400px] overflow-y-auto"><code class="${languageClass}">${content}</code></pre>
           </div>
         `;
         tabContentsDiv.appendChild(contentDiv);
@@ -159,11 +175,11 @@
             <div class="space-y-4">
               <div>
                 <div class="font-medium mb-1">原始SQL:</div>
-                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto">${migration.original_sql}</pre>
+                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto"><code class="language-sql">${migration.original_sql}</code></pre>
               </div>
               <div>
                 <div class="font-medium mb-1">反向SQL:</div>
-                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto">${migration.reversed_sql}</pre>
+                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto"><code class="language-sql">${migration.reversed_sql}</code></pre>
               </div>
             </div>
           </div>
@@ -172,6 +188,10 @@
       }
 
       resultSection.classList.remove('hidden');
+      // Initialize syntax highlighting
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
     }
 
     function switchTab(index) {
