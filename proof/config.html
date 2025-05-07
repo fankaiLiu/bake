@@ -1,309 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html class="h-full">
 <head>
   <title>配置</title>
-  <style>
-    :root {
-      --primary-color: #0071e3;
-      --secondary-color: #0063cc;
-      --background-color: #f9f9f9;
-      --text-color: #333;
-      --border-color: #e1e4e8;
-      --card-background: white;
-      --input-background: white;
-      --input-border: #d1d5db;
-      --input-focus-border: #0071e3;
-      --input-focus-shadow: rgba(0, 113, 227, 0.2);
-      --tip-background: #e8f0fe;
-      --tip-border: #c2d7ff;
-      --tip-text: #174ea6;
-      --path-badge-background: #0071e3;
-      --path-badge-text: white;
-      --selector-background: white;
-      --selector-border: #d1d5db;
-      --selector-hover: #f3f4f6;
-      --selector-option: #0071e3;
-      --selector-parent: #4b5563;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --primary-color: #3b82f6;
-        --secondary-color: #60a5fa;
-        --background-color: #0f172a;
-        --text-color: #e2e8f0;
-        --border-color: #334155;
-        --card-background: #1e293b;
-        --input-background: #1e293b;
-        --input-border: #475569;
-        --input-focus-border: #3b82f6;
-        --input-focus-shadow: rgba(59, 130, 246, 0.2);
-        --tip-background: #1e3a8a;
-        --tip-border: #3b82f6;
-        --tip-text: #93c5fd;
-        --path-badge-background: #3b82f6;
-        --path-badge-text: white;
-        --selector-background: #1e293b;
-        --selector-border: #475569;
-        --selector-hover: #334155;
-        --selector-option: #3b82f6;
-        --selector-parent: #94a3b8;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            apple: {
+              blue: '#007AFF',
+              dark: '#1D1D1F',
+              gray: '#86868B',
+              light: '#F5F5F7'
+            }
+          }
+        }
       }
     }
-
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; 
-      max-width: 800px; 
-      margin: 0 auto; 
-      padding: 20px; 
-      color: var(--text-color);
-      line-height: 1.5;
-      background-color: var(--background-color);
-    }
-    button { 
-      padding: 8px 16px; 
-      margin-right: 10px; 
-      cursor: pointer; 
-      background-color: var(--primary-color); 
-      color: white; 
-      border: none; 
-      border-radius: 6px; 
-      font-weight: 500;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-    button:hover { 
-      background-color: var(--secondary-color); 
-    }
-    button:active {
-      transform: scale(0.98);
-    }
-    .nav { 
-      margin-bottom: 24px; 
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .nav a { 
-      text-decoration: none; 
-      color: var(--primary-color); 
-      font-weight: 500;
-      padding: 4px 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    }
-    .nav a:hover {
-      background-color: var(--selector-hover);
-    }
-    .path-item { 
-      display: flex; 
-      margin-bottom: 12px; 
-      align-items: center; 
-      flex-wrap: wrap; 
-    }
-    .path-item input { 
-      flex-grow: 1; 
-      padding: 10px 12px; 
-      margin-right: 10px; 
-      min-width: 250px;
-      border: 1px solid var(--input-border);
-      border-radius: 6px;
-      transition: border-color 0.3s, box-shadow 0.3s;
-      background-color: var(--input-background);
-      color: var(--text-color);
-    }
-    .path-item input:focus {
-      outline: none;
-      border-color: var(--input-focus-border);
-      box-shadow: 0 0 0 3px var(--input-focus-shadow);
-    }
-    .path-item button { 
-      margin-left: 5px; 
-      margin-top: 5px;
-      font-size: 0.9em;
-    }
-    .section { 
-      margin-bottom: 24px; 
-      border: 1px solid var(--border-color); 
-      padding: 20px; 
-      border-radius: 8px; 
-      position: relative;
-      background-color: var(--card-background);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: box-shadow 0.3s;
-    }
-    .section:hover {
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-    }
-    h1 {
-      color: var(--text-color);
-      margin-bottom: 24px;
-    }
-    h2 { 
-      margin-top: 0; 
-      color: var(--text-color);
-      font-weight: 600;
-      font-size: 1.25rem;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 8px;
-      margin-bottom: 16px;
-    }
-    .tip { 
-      font-size: 0.9em; 
-      color: var(--primary-color); 
-      margin-left: 10px; 
-      display: inline-block; 
-      height: 1em; 
-    }
-    .dir-selector {
-        display: none;
-        position: absolute;
-        background-color: var(--selector-background);
-        border: 1px solid var(--selector-border);
-        padding: 10px;
-        max-height: 220px;
-        overflow-y: auto;
-        z-index: 10;
-        min-width: 280px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        margin-top: 5px;
-        left: 15px;
-        border-radius: 6px;
-    }
-    .dir-selector ul { list-style: none; padding: 0; margin: 0; }
-    .dir-selector li { 
-      padding: 8px 12px; 
-      cursor: pointer; 
-      white-space: nowrap;
-      border-radius: 4px;
-      transition: background-color 0.15s;
-      color: var(--text-color);
-    }
-    .dir-selector li:hover { 
-      background-color: var(--selector-hover); 
-    }
-    .dir-selector li.select-option { 
-      font-weight: bold; 
-      border-top: 1px solid var(--border-color); 
-      margin-top: 5px; 
-      padding-top: 8px; 
-      color: var(--selector-option); 
-    }
-    .dir-selector li.parent-option { 
-      color: var(--selector-parent); 
-      font-weight: 500;
-    }
-    .path-container { 
-      margin-bottom: 12px; 
-      position: relative; 
-    }
-    #server-diff-tip {
-      background-color: var(--tip-background);
-      border: 1px solid var(--tip-border);
-      color: var(--tip-text);
-    }
-    #cwd-display {
-      background-color: var(--selector-hover);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9em;
-      margin-bottom: 20px;
-    }
-    .path-display {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .path-label {
-      font-weight: 500;
-      min-width: 80px;
-    }
-    .relative-path {
-      color: var(--primary-color);
-      background-color: var(--tip-background);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: monospace;
-      margin-left: 6px;
-    }
-    .path-mode-switch {
-      margin-left: 10px;
-      font-size: 0.85em;
-      color: var(--text-color);
-      cursor: pointer;
-      text-decoration: underline;
-    }
-    .path-mode-container {
-      display: flex;
-      align-items: center;
-      background-color: var(--selector-hover);
-      padding: 8px 16px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      justify-content: space-between;
-    }
-    .path-mode-info {
-      display: flex;
-      align-items: center;
-    }
-    .path-mode-badge {
-      background-color: var(--path-badge-background);
-      color: var(--path-badge-text);
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      margin-left: 8px;
-    }
-  </style>
+  </script>
 </head>
-<body>
-  <div class="nav">
-    <a href="index.html">返回主页</a>
-  </div>
-  <h1>配置</h1>
-  <div id="cwd-display" style="margin-bottom: 15px; font-size: 0.9em; color: #555;">当前工作目录: <span id="cwd-path">加载中...</span></div>
-  
-  <!-- 添加路径模式切换按钮到页面顶部 -->
-  <div class="path-mode-container">
-    <div class="path-mode-info">
-      <span>当前路径显示模式:</span>
-      <span class="path-mode-badge" id="current-path-mode">相对路径</span>
-    </div>
-    <button onclick="togglePathDisplayMode()" id="path-mode-toggle-btn">切换为绝对路径</button>
-  </div>
+<body class="h-full bg-white dark:bg-apple-dark text-apple-dark dark:text-white">
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <!-- Navigation -->
+    <nav class="mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
+      <a href="index.html" class="text-apple-blue hover:opacity-80 transition-opacity">返回主页</a>
+    </nav>
 
-  <div class="section">
-    <h2>SQL 文件路径</h2>
-    <div class="path-item">
-      <input type="text" id="sql-path" placeholder="请手动粘贴 SQL 文件路径或选择目录...">
-      <button onclick="showSqlDirectorySelector('.')">选择目录</button>
-      <span class="tip" id="sql-path-tip"></span>
-    </div>
-    <div id="sql-dir-selector" class="dir-selector"></div>
-  </div>
+    <h1 class="text-3xl font-semibold mb-8">配置</h1>
 
-  <div class="section" id="output-section">
-    <h2>输出路径</h2>
-    <div class="path-item">
-      <label>Rust 代码输出路径:</label>
-      <input type="text" id="rust-output-path" placeholder="请手动粘贴或点击右侧按钮选择目录...">
-      <button onclick="showRustDirectorySelector('.')">选择目录</button>
-      <span class="tip" id="rust-output-path-tip"></span>
+    <!-- Current Directory Display -->
+    <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm">
+      当前工作目录: <span id="cwd-path" class="font-mono">加载中...</span>
     </div>
-    <div id="rust-output-dir-selector" class="dir-selector"></div>
 
-    <div class="path-item" style="margin-top: 15px;">
-      <label>前端代码输出路径:</label>
-      <input type="text" id="frontend-output-path" placeholder="请手动粘贴或点击右侧按钮选择目录...">
-      <button onclick="showFrontendDirectorySelector('.')">选择目录</button>
-      <span class="tip" id="frontend-output-path-tip"></span>
+    <!-- Path Mode Toggle -->
+    <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl flex justify-between items-center">
+      <div class="flex items-center">
+        <span>当前路径显示模式:</span>
+        <span id="current-path-mode" class="ml-2 px-3 py-1 bg-apple-blue text-white text-sm rounded-full">相对路径</span>
+      </div>
+      <button onclick="togglePathDisplayMode()" id="path-mode-toggle-btn" 
+              class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+        切换为绝对路径
+      </button>
     </div>
-    <div id="frontend-output-dir-selector" class="dir-selector"></div>
-  </div>
 
-  <div>
-    <button onclick="saveConfig()">保存配置</button>
-    <button onclick="resetConfig()">重置配置</button>
-    <span class="tip" id="save-reset-tip"></span>
-    <span id="server-diff-tip" style="color: #3949ab; font-weight: bold; margin-left: 10px; background-color: #e8eaf6; padding: 3px 8px; border-radius: 4px; border: 1px solid #9fa8da; display: none;">与配置文件不同步，清保存</span>
+    <!-- SQL Path Section -->
+    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">SQL 文件路径</h2>
+      <div class="space-y-4">
+        <div class="flex items-center gap-4">
+          <input type="text" id="sql-path" 
+                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 placeholder="请手动粘贴 SQL 文件路径或选择目录...">
+          <button onclick="showSqlDirectorySelector('.')" 
+                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+            选择目录
+          </button>
+        </div>
+        <span id="sql-path-tip" class="text-sm text-apple-blue"></span>
+      </div>
+      <div id="sql-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+    </div>
+
+    <!-- Output Path Section -->
+    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">输出路径</h2>
+      
+      <!-- Rust Output Path -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Rust 代码输出路径:</label>
+        <div class="flex items-center gap-4">
+          <input type="text" id="rust-output-path" 
+                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 placeholder="请手动粘贴或点击右侧按钮选择目录...">
+          <button onclick="showRustDirectorySelector('.')" 
+                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+            选择目录
+          </button>
+        </div>
+        <span id="rust-output-path-tip" class="text-sm text-apple-blue"></span>
+        <div id="rust-output-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+      </div>
+
+      <!-- Frontend Output Path -->
+      <div>
+        <label class="block text-sm font-medium mb-2">前端代码输出路径:</label>
+        <div class="flex items-center gap-4">
+          <input type="text" id="frontend-output-path" 
+                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 placeholder="请手动粘贴或点击右侧按钮选择目录...">
+          <button onclick="showFrontendDirectorySelector('.')" 
+                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+            选择目录
+          </button>
+        </div>
+        <span id="frontend-output-path-tip" class="text-sm text-apple-blue"></span>
+        <div id="frontend-output-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-4">
+      <button onclick="saveConfig()" 
+              class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+        保存配置
+      </button>
+      <button onclick="resetConfig()" 
+              class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity">
+        重置配置
+      </button>
+      <span id="save-reset-tip" class="text-sm text-apple-blue"></span>
+      <span id="server-diff-tip" class="hidden px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full text-sm font-medium">
+        与配置文件不同步，请保存
+      </span>
+    </div>
   </div>
 
   <script>

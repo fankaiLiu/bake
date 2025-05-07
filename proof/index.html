@@ -1,347 +1,100 @@
 <!-- index.html -->
 <!DOCTYPE html>
-<html>
+<html class="h-full">
 <head>
   <title>SQL Code Generator</title>
-  <style>
-    :root {
-      --primary-color: #2563eb;
-      --secondary-color: #1e40af;
-      --background-color: #f8fafc;
-      --text-color: #1e293b;
-      --border-color: #e2e8f0;
-      --card-background: white;
-      --code-background: #1e1e1e;
-      --code-text: #d4d4d4;
-      --file-item-background: #f8fafc;
-      --migration-item-background: #f1f5f9;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --primary-color: #3b82f6;
-        --secondary-color: #60a5fa;
-        --background-color: #0f172a;
-        --text-color: #e2e8f0;
-        --border-color: #334155;
-        --card-background: #1e293b;
-        --code-background: #0f172a;
-        --code-text: #e2e8f0;
-        --file-item-background: #1e293b;
-        --migration-item-background: #334155;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            apple: {
+              blue: '#007AFF',
+              dark: '#1D1D1F',
+              gray: '#86868B',
+              light: '#F5F5F7'
+            }
+          }
+        }
       }
     }
-
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-    }
-
-    .nav {
-      margin-bottom: 0;
-      padding: 12px 24px;
-      background: var(--card-background);
-      border-bottom: 1px solid var(--border-color);
-      box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.04);
-    }
-
-    .nav a {
-      text-decoration: none;
-      color: var(--primary-color);
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background-color 0.2s;
-    }
-
-    .nav a:hover {
-      background-color: var(--migration-item-background);
-    }
-
-    .main-flex {
-      display: flex;
-      height: calc(100vh - 48px);
-      max-width: 1400px;
-      margin: 0 auto;
-      background: var(--background-color);
-      box-sizing: border-box;
-    }
-
-    .left-panel {
-      flex: 0 0 420px;
-      background: var(--card-background);
-      border-right: 1px solid var(--border-color);
-      padding: 40px 32px 32px 32px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      min-width: 340px;
-      box-shadow: 2px 0 8px -4px rgb(0 0 0 / 0.04);
-    }
-
-    .right-panel {
-      flex: 1 1 0;
-      padding: 40px 40px 32px 40px;
-      overflow-y: auto;
-      background: var(--background-color);
-      min-width: 0;
-    }
-
-    h1 {
-      color: var(--primary-color);
-      margin-bottom: 32px;
-      font-size: 2.2rem;
-      letter-spacing: 1px;
-    }
-
-    .section {
-      margin-bottom: 32px;
-      padding: 20px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: var(--card-background);
-      box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.04);
-    }
-
-    .section h2 {
-      margin-top: 0;
-      color: var(--text-color);
-      font-size: 1.3rem;
-    }
-
-    textarea {
-      width: 100%;
-      height: 140px;
-      margin: 10px 0 18px 0;
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-family: monospace;
-      resize: vertical;
-      background-color: var(--card-background);
-      color: var(--text-color);
-      font-size: 1rem;
-      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.02);
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      margin: 0 0 8px 0;
-    }
-
-    button {
-      padding: 10px 24px;
-      border: none;
-      border-radius: 8px;
-      background-color: var(--primary-color);
-      color: white;
-      font-weight: 500;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.2s, box-shadow 0.2s;
-      box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.04);
-    }
-
-    button:disabled {
-      background-color: #a5b4fc;
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-
-    button.secondary {
-      background-color: #64748b;
-    }
-
-    button.secondary:hover {
-      background-color: #475569;
-    }
-
-    .write-button {
-      margin-top: 16px;
-      background-color: var(--primary-color);
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .write-button:hover {
-      background-color: var(--secondary-color);
-    }
-
-    .code-display {
-      background: var(--code-background);
-      color: var(--code-text);
-      padding: 16px;
-      border-radius: 8px;
-      font-family: 'Consolas', monospace;
-      white-space: pre-wrap;
-      margin: 16px 0 0 0;
-      max-height: 400px;
-      overflow-y: auto;
-      font-size: 1rem;
-    }
-
-    .file-item {
-      margin-bottom: 16px;
-      padding: 12px;
-      background: var(--file-item-background);
-      border-radius: 8px;
-      box-shadow: 0 1px 4px -2px rgb(0 0 0 / 0.04);
-    }
-
-    .file-item h3 {
-      margin: 0 0 8px 0;
-      color: var(--primary-color);
-      font-size: 1.1rem;
-    }
-
-    .migration-item {
-      margin: 12px 0;
-      padding: 12px;
-      background: var(--migration-item-background);
-      border-radius: 8px;
-    }
-
-    .migration-item h4 {
-      margin: 0 0 8px 0;
-      color: var(--text-color);
-    }
-
-    /* 添加标签页样式 */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 8px;
-    }
-
-    .tab {
-      padding: 8px 16px;
-      cursor: pointer;
-      border-radius: 8px 8px 0 0;
-      color: var(--text-color);
-      background: var(--migration-item-background);
-      transition: all 0.2s;
-      font-size: 1rem;
-    }
-
-    .tab.active {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* loading overlay */
-    .loading-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(30, 41, 59, 0.35);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.2s;
-    }
-
-    .loading-box {
-      background: var(--card-background);
-      padding: 36px 48px 28px 48px;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.10);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 6px solid #e5e7eb;
-      border-top: 6px solid var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 18px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .close-loading-btn {
-      margin-top: 10px;
-      background: #64748b;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 18px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.2s;
-    }
-
-    .close-loading-btn:hover {
-      background: #475569;
-    }
-  </style>
+  </script>
 </head>
-<body>
-  <div class="nav">
-    <a href="config.html">转到配置页面</a>
-  </div>
-  <div class="main-flex">
-    <div class="left-panel">
-      <h1>SQL Code Generator</h1>
-      <div class="section">
-        <h2>需求输入</h2>
-        <textarea id="requirements" placeholder="请输入您的SQL需求..."></textarea>
-        <div class="button-group">
-          <button id="generateBtn" onclick="generateCode()">生成代码</button>
+<body class="h-full bg-apple-light dark:bg-apple-dark text-apple-dark dark:text-white">
+  <!-- Navigation -->
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4">
+      <a href="config.html" class="inline-block py-4 text-apple-blue hover:opacity-80 transition-opacity">转到配置页面</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex h-[calc(100vh-57px)]">
+    <!-- Left Panel -->
+    <div class="w-[420px] min-w-[340px] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm p-8">
+      <h1 class="text-3xl font-semibold text-apple-blue mb-8">SQL Code Generator</h1>
+      
+      <!-- Requirements Input Section -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <h2 class="text-xl font-semibold mb-4">需求输入</h2>
+        <textarea id="requirements" 
+                  class="w-full h-36 p-4 mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
+                  placeholder="请输入您的SQL需求..."></textarea>
+        <div class="flex gap-3">
+          <button id="generateBtn" onclick="generateCode()" 
+                  class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+            生成代码
+          </button>
         </div>
       </div>
     </div>
-    <div class="right-panel">
-      <div class="section" id="resultSection" style="display: none;">
-        <h2>生成结果</h2>
-        <div id="tabs" class="tabs"></div>
+
+    <!-- Right Panel -->
+    <div class="flex-1 p-8 overflow-y-auto">
+      <div id="resultSection" class="hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <h2 class="text-xl font-semibold mb-4">生成结果</h2>
+        
+        <!-- Tabs -->
+        <div id="tabs" class="flex gap-1 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"></div>
+        
+        <!-- Tab Contents -->
         <div id="tabContents"></div>
-        <button class="write-button" onclick="writeFiles()">写入文件</button>
+        
+        <button onclick="writeFiles()" 
+                class="mt-6 px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+          写入文件
+        </button>
       </div>
     </div>
   </div>
-  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
-    <div class="loading-box">
-      <div class="spinner"></div>
-      <div style="margin-bottom: 8px; color: var(--text-color); font-size: 1.1rem;">正在生成代码，请稍候...</div>
-      <button class="close-loading-btn" onclick="hideLoading()">手动关闭</button>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl flex flex-col items-center">
+      <div class="w-12 h-12 border-4 border-gray-200 dark:border-gray-600 border-t-apple-blue rounded-full animate-spin mb-4"></div>
+      <div class="text-lg mb-4 text-gray-700 dark:text-gray-200">正在生成代码，请稍候...</div>
+      <button onclick="hideLoading()" 
+              class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity">
+        手动关闭
+      </button>
     </div>
   </div>
+
   <script>
     let currentGeneratedCode = null;
+
     function showLoading() {
-      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('loadingOverlay').classList.remove('hidden');
       document.getElementById('generateBtn').disabled = true;
     }
+
     function hideLoading() {
-      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('loadingOverlay').classList.add('hidden');
       document.getElementById('generateBtn').disabled = false;
     }
+
     async function generateCode() {
       const requirements = document.getElementById('requirements').value;
       showLoading();
@@ -364,61 +117,76 @@
         hideLoading();
       }
     }
+
     function displayGeneratedCode(data) {
       const resultSection = document.getElementById('resultSection');
       const tabsDiv = document.getElementById('tabs');
       const tabContentsDiv = document.getElementById('tabContents');
+      
       tabsDiv.innerHTML = '';
       tabContentsDiv.innerHTML = '';
+
       Object.entries(data.code_files).forEach(([filePath, content], index) => {
         const tab = document.createElement('div');
-        tab.className = `tab ${index === 0 ? 'active' : ''}`;
+        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${index === 0 ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
         tab.textContent = getBasename(filePath);
         tab.onclick = () => switchTab(index);
         tabsDiv.appendChild(tab);
+
         const contentDiv = document.createElement('div');
-        contentDiv.className = `tab-content ${index === 0 ? 'active' : ''}`;
+        contentDiv.className = `tab-content ${index === 0 ? 'block' : 'hidden'}`;
         contentDiv.innerHTML = `
-          <div class="file-item">
-            <h3>${filePath}</h3>
-            <div class="code-display">${content}</div>
+          <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+            <h3 class="text-lg font-medium text-apple-blue mb-2">${filePath}</h3>
+            <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto max-h-[400px] overflow-y-auto">${content}</pre>
           </div>
         `;
         tabContentsDiv.appendChild(contentDiv);
       });
+
       if (data.table_migrations && data.table_migrations.length > 0) {
         const migrationsTab = document.createElement('div');
-        migrationsTab.className = 'tab';
+        migrationsTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
         migrationsTab.textContent = 'Migrations';
         migrationsTab.onclick = () => switchTab(Object.keys(data.code_files).length);
         tabsDiv.appendChild(migrationsTab);
+
         const migrationsContent = document.createElement('div');
-        migrationsContent.className = 'tab-content';
+        migrationsContent.className = 'tab-content hidden';
         migrationsContent.innerHTML = data.table_migrations.map((migration, index) => `
-          <div class="migration-item">
-            <h4>迁移 #${index + 1}</h4>
-            <div class="code-display">
-              <strong>原始SQL:</strong>
-              ${migration.original_sql}
-              <strong>反向SQL:</strong>
-              ${migration.reversed_sql}
+          <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+            <h4 class="text-lg font-medium mb-2">迁移 #${index + 1}</h4>
+            <div class="space-y-4">
+              <div>
+                <div class="font-medium mb-1">原始SQL:</div>
+                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto">${migration.original_sql}</pre>
+              </div>
+              <div>
+                <div class="font-medium mb-1">反向SQL:</div>
+                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto">${migration.reversed_sql}</pre>
+              </div>
             </div>
           </div>
         `).join('');
         tabContentsDiv.appendChild(migrationsContent);
       }
-      resultSection.style.display = 'block';
+
+      resultSection.classList.remove('hidden');
     }
+
     function switchTab(index) {
-      const tabs = document.querySelectorAll('.tab');
+      const tabs = document.querySelectorAll('#tabs > div');
       const contents = document.querySelectorAll('.tab-content');
+      
       tabs.forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
+        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${i === index ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
       });
+      
       contents.forEach((content, i) => {
-        content.classList.toggle('active', i === index);
+        content.className = `tab-content ${i === index ? 'block' : 'hidden'}`;
       });
     }
+
     async function writeFiles() {
       if (!currentGeneratedCode) {
         alert('没有可写入的代码');
@@ -444,6 +212,7 @@
         hideLoading();
       }
     }
+
     function getBasename(filePath) {
       return filePath.split('/').pop();
     }
