@@ -34,27 +34,19 @@
 
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
       background-color: var(--background-color);
       color: var(--text-color);
-      line-height: 1.6;
-    }
-
-    .container {
-      background: var(--card-background);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
     }
 
     .nav {
-      margin-bottom: 24px;
-      padding: 12px;
+      margin-bottom: 0;
+      padding: 12px 24px;
       background: var(--card-background);
-      border-radius: 8px;
-      box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.04);
     }
 
     .nav a {
@@ -70,57 +62,95 @@
       background-color: var(--migration-item-background);
     }
 
+    .main-flex {
+      display: flex;
+      height: calc(100vh - 48px);
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--background-color);
+      box-sizing: border-box;
+    }
+
+    .left-panel {
+      flex: 0 0 420px;
+      background: var(--card-background);
+      border-right: 1px solid var(--border-color);
+      padding: 40px 32px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-width: 340px;
+      box-shadow: 2px 0 8px -4px rgb(0 0 0 / 0.04);
+    }
+
+    .right-panel {
+      flex: 1 1 0;
+      padding: 40px 40px 32px 40px;
+      overflow-y: auto;
+      background: var(--background-color);
+      min-width: 0;
+    }
+
     h1 {
-      color: var(--text-color);
-      margin-bottom: 24px;
-      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 32px;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
     }
 
     .section {
       margin-bottom: 32px;
       padding: 20px;
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 10px;
+      background: var(--card-background);
+      box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.04);
     }
 
     .section h2 {
       margin-top: 0;
       color: var(--text-color);
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
 
     textarea {
       width: 100%;
-      height: 150px;
-      margin: 10px 0;
+      height: 140px;
+      margin: 10px 0 18px 0;
       padding: 12px;
       border: 1px solid var(--border-color);
-      border-radius: 6px;
+      border-radius: 8px;
       font-family: monospace;
       resize: vertical;
       background-color: var(--card-background);
       color: var(--text-color);
+      font-size: 1rem;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.02);
     }
 
     .button-group {
       display: flex;
       gap: 12px;
-      margin: 16px 0;
+      margin: 0 0 8px 0;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 10px 24px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       background-color: var(--primary-color);
       color: white;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
+      font-size: 1rem;
+      transition: background-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.04);
     }
 
-    button:hover {
-      background-color: var(--secondary-color);
+    button:disabled {
+      background-color: #a5b4fc;
+      cursor: not-allowed;
+      opacity: 0.7;
     }
 
     button.secondary {
@@ -131,35 +161,53 @@
       background-color: #475569;
     }
 
+    .write-button {
+      margin-top: 16px;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .write-button:hover {
+      background-color: var(--secondary-color);
+    }
+
     .code-display {
       background: var(--code-background);
       color: var(--code-text);
       padding: 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-family: 'Consolas', monospace;
       white-space: pre-wrap;
-      margin: 16px 0;
+      margin: 16px 0 0 0;
       max-height: 400px;
       overflow-y: auto;
+      font-size: 1rem;
     }
 
     .file-item {
       margin-bottom: 16px;
       padding: 12px;
       background: var(--file-item-background);
-      border-radius: 6px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px -2px rgb(0 0 0 / 0.04);
     }
 
     .file-item h3 {
       margin: 0 0 8px 0;
       color: var(--primary-color);
+      font-size: 1.1rem;
     }
 
     .migration-item {
       margin: 12px 0;
       padding: 12px;
       background: var(--migration-item-background);
-      border-radius: 6px;
+      border-radius: 8px;
     }
 
     .migration-item h4 {
@@ -179,10 +227,11 @@
     .tab {
       padding: 8px 16px;
       cursor: pointer;
-      border-radius: 6px 6px 0 0;
+      border-radius: 8px 8px 0 0;
       color: var(--text-color);
       background: var(--migration-item-background);
       transition: all 0.2s;
+      font-size: 1rem;
     }
 
     .tab.active {
@@ -198,19 +247,57 @@
       display: block;
     }
 
-    .write-button {
-      margin-top: 16px;
-      background-color: var(--primary-color);
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    /* loading overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(30, 41, 59, 0.35);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
     }
 
-    .write-button:hover {
-      background-color: var(--secondary-color);
+    .loading-box {
+      background: var(--card-background);
+      padding: 36px 48px 28px 48px;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.10);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 6px solid #e5e7eb;
+      border-top: 6px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 18px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .close-loading-btn {
+      margin-top: 10px;
+      background: #64748b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 18px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .close-loading-btn:hover {
+      background: #475569;
     }
   </style>
 </head>
@@ -218,71 +305,77 @@
   <div class="nav">
     <a href="config.html">转到配置页面</a>
   </div>
-
-  <div class="container">
-    <h1>SQL Code Generator</h1>
-
-    <div class="section">
-      <h2>需求输入</h2>
-      <textarea id="requirements" placeholder="请输入您的SQL需求..."></textarea>
-      <div class="button-group">
-        <button onclick="generateCode()">生成代码</button>
+  <div class="main-flex">
+    <div class="left-panel">
+      <h1>SQL Code Generator</h1>
+      <div class="section">
+        <h2>需求输入</h2>
+        <textarea id="requirements" placeholder="请输入您的SQL需求..."></textarea>
+        <div class="button-group">
+          <button id="generateBtn" onclick="generateCode()">生成代码</button>
+        </div>
       </div>
     </div>
-
-    <div class="section" id="resultSection" style="display: none;">
-      <h2>生成结果</h2>
-      <div id="tabs" class="tabs"></div>
-      <div id="tabContents"></div>
-      <button class="write-button" onclick="writeFiles()">写入文件</button>
+    <div class="right-panel">
+      <div class="section" id="resultSection" style="display: none;">
+        <h2>生成结果</h2>
+        <div id="tabs" class="tabs"></div>
+        <div id="tabContents"></div>
+        <button class="write-button" onclick="writeFiles()">写入文件</button>
+      </div>
     </div>
   </div>
-  
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div style="margin-bottom: 8px; color: var(--text-color); font-size: 1.1rem;">正在生成代码，请稍候...</div>
+      <button class="close-loading-btn" onclick="hideLoading()">手动关闭</button>
+    </div>
+  </div>
   <script>
     let currentGeneratedCode = null;
-
+    function showLoading() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('generateBtn').disabled = true;
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('generateBtn').disabled = false;
+    }
     async function generateCode() {
       const requirements = document.getElementById('requirements').value;
-      
+      showLoading();
       try {
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ requirements })
         });
-
         if (!response.ok) {
           throw new Error('生成代码失败');
         }
-
         const data = await response.json();
         currentGeneratedCode = data;
         displayGeneratedCode(data);
+        hideLoading();
       } catch (error) {
         console.error('Error generating code:', error);
         alert('生成代码时发生错误: ' + error.message);
+        hideLoading();
       }
     }
-
     function displayGeneratedCode(data) {
       const resultSection = document.getElementById('resultSection');
       const tabsDiv = document.getElementById('tabs');
       const tabContentsDiv = document.getElementById('tabContents');
-      
-      // 清空现有内容
       tabsDiv.innerHTML = '';
       tabContentsDiv.innerHTML = '';
-      
-      // 创建标签页和内容
       Object.entries(data.code_files).forEach(([filePath, content], index) => {
-        // 创建标签
         const tab = document.createElement('div');
         tab.className = `tab ${index === 0 ? 'active' : ''}`;
         tab.textContent = getBasename(filePath);
         tab.onclick = () => switchTab(index);
         tabsDiv.appendChild(tab);
-        
-        // 创建内容
         const contentDiv = document.createElement('div');
         contentDiv.className = `tab-content ${index === 0 ? 'active' : ''}`;
         contentDiv.innerHTML = `
@@ -293,15 +386,12 @@
         `;
         tabContentsDiv.appendChild(contentDiv);
       });
-
-      // 显示迁移信息
       if (data.table_migrations && data.table_migrations.length > 0) {
         const migrationsTab = document.createElement('div');
         migrationsTab.className = 'tab';
         migrationsTab.textContent = 'Migrations';
         migrationsTab.onclick = () => switchTab(Object.keys(data.code_files).length);
         tabsDiv.appendChild(migrationsTab);
-
         const migrationsContent = document.createElement('div');
         migrationsContent.className = 'tab-content';
         migrationsContent.innerHTML = data.table_migrations.map((migration, index) => `
@@ -310,7 +400,6 @@
             <div class="code-display">
               <strong>原始SQL:</strong>
               ${migration.original_sql}
-              
               <strong>反向SQL:</strong>
               ${migration.reversed_sql}
             </div>
@@ -318,29 +407,24 @@
         `).join('');
         tabContentsDiv.appendChild(migrationsContent);
       }
-
       resultSection.style.display = 'block';
     }
-
     function switchTab(index) {
       const tabs = document.querySelectorAll('.tab');
       const contents = document.querySelectorAll('.tab-content');
-      
       tabs.forEach((tab, i) => {
         tab.classList.toggle('active', i === index);
       });
-      
       contents.forEach((content, i) => {
         content.classList.toggle('active', i === index);
       });
     }
-
     async function writeFiles() {
       if (!currentGeneratedCode) {
         alert('没有可写入的代码');
         return;
       }
-
+      showLoading();
       try {
         const response = await fetch('/api/write-files', {
           method: 'POST',
@@ -349,19 +433,17 @@
             code_files: currentGeneratedCode.code_files
           })
         });
-
         if (!response.ok) {
           throw new Error('写入文件失败');
         }
-
         alert('文件写入成功');
+        hideLoading();
       } catch (error) {
         console.error('Error writing files:', error);
         alert('写入文件时发生错误: ' + error.message);
+        hideLoading();
       }
     }
-
-    // 辅助函数：获取文件名
     function getBasename(filePath) {
       return filePath.split('/').pop();
     }
