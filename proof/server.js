@@ -31,6 +31,37 @@ function logRequest(url, method) {
   console.log(`接收到请求: ${method} ${url}`);
 }
 
+// 读取SQL文件内容
+async function readSqlFiles(sqlPath) {
+  try {
+    const currentWorkingDirectory = process.cwd();
+    const fullPath = path.resolve(currentWorkingDirectory, sqlPath);
+    
+    // 确保路径存在且是目录
+    const stats = await fs.stat(fullPath);
+    if (!stats.isDirectory()) {
+      throw new Error('SQL path is not a directory');
+    }
+
+    // 读取目录下的所有文件
+    const files = await fs.readdir(fullPath);
+    const sqlFiles = files.filter(file => file.endsWith('.sql'));
+    
+    // 读取所有SQL文件内容并拼接
+    const contents = await Promise.all(
+      sqlFiles.map(async file => {
+        const content = await fs.readFile(path.join(fullPath, file), 'utf-8');
+        return content;
+      })
+    );
+
+    return contents.join('\n');
+  } catch (error) {
+    console.error('Error reading SQL files:', error);
+    throw error;
+  }
+}
+
 const server = Bun.serve({
   port: 3000,
   async fetch(req) {
@@ -206,28 +237,56 @@ const server = Bun.serve({
       try {
         const { requirements } = await req.json();
         
-        // Mock response for now
-        const response = {
-          code_files: {
-            "migrations/001_create_users.sql": "CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));",
-            "migrations/002_create_posts.sql": "CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(255));"
+        // 读取配置文件
+        const configContent = await Bun.file("bake_config.json").text();
+        const config = JSON.parse(configContent);
+        
+        // 读取SQL文件内容
+        const tableSql = await readSqlFiles(config.sqlPaths);
+        
+        // 调用本地AI服务
+        const aiResponse = await fetch('http://localhost:5800/ai_codegen', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          table_migrations: [
-            {
-              original_sql: "CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));",
-              reversed_sql: "DROP TABLE users;"
-            },
-            {
-              original_sql: "CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(255));",
-              reversed_sql: "DROP TABLE posts;"
-            }
-          ]
-        };
+          body: JSON.stringify({
+            table_sql: tableSql,
+            question: requirements
+          })
+        });
 
-        return Response.json(response);
+        if (!aiResponse.ok) {
+          throw new Error('AI service request failed');
+        }
+
+        const generatedCode = await aiResponse.json();
+        return Response.json(generatedCode);
       } catch (error) {
         console.error("代码生成错误:", error);
         return Response.json({ error: "代码生成失败", message: error.message }, { status: 500 });
+      }
+    }
+    
+    // 写入文件 API
+    if (url.pathname === "/api/write-files" && req.method === "POST") {
+      try {
+        const { code_files } = await req.json();
+        const configContent = await Bun.file("bake_config.json").text();
+        const config = JSON.parse(configContent);
+        const currentWorkingDirectory = process.cwd();
+
+        // 写入每个文件
+        for (const [filePath, content] of Object.entries(code_files)) {
+          const fullPath = path.resolve(currentWorkingDirectory, filePath);
+          await fs.mkdir(path.dirname(fullPath), { recursive: true });
+          await fs.writeFile(fullPath, content, 'utf-8');
+        }
+
+        return Response.json({ success: true });
+      } catch (error) {
+        console.error("写入文件错误:", error);
+        return Response.json({ error: "写入文件失败", message: error.message }, { status: 500 });
       }
     }
     

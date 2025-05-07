@@ -166,6 +166,52 @@
       margin: 0 0 8px 0;
       color: var(--text-color);
     }
+
+    /* 添加标签页样式 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      color: var(--text-color);
+      background: var(--migration-item-background);
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .write-button {
+      margin-top: 16px;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .write-button:hover {
+      background-color: var(--secondary-color);
+    }
   </style>
 </head>
 <body>
@@ -186,14 +232,15 @@
 
     <div class="section" id="resultSection" style="display: none;">
       <h2>生成结果</h2>
-      <div id="generatedCode"></div>
-      <div class="button-group">
-        <button onclick="saveToConfig()">保存到配置</button>
-      </div>
+      <div id="tabs" class="tabs"></div>
+      <div id="tabContents"></div>
+      <button class="write-button" onclick="writeFiles()">写入文件</button>
     </div>
   </div>
   
   <script>
+    let currentGeneratedCode = null;
+
     async function generateCode() {
       const requirements = document.getElementById('requirements').value;
       
@@ -209,6 +256,7 @@
         }
 
         const data = await response.json();
+        currentGeneratedCode = data;
         displayGeneratedCode(data);
       } catch (error) {
         console.error('Error generating code:', error);
@@ -218,24 +266,45 @@
 
     function displayGeneratedCode(data) {
       const resultSection = document.getElementById('resultSection');
-      const generatedCodeDiv = document.getElementById('generatedCode');
+      const tabsDiv = document.getElementById('tabs');
+      const tabContentsDiv = document.getElementById('tabContents');
       
-      let html = '<h3>生成的文件:</h3>';
+      // 清空现有内容
+      tabsDiv.innerHTML = '';
+      tabContentsDiv.innerHTML = '';
       
-      // Display code files
-      for (const [filePath, content] of Object.entries(data.code_files)) {
-        html += `
+      // 创建标签页和内容
+      Object.entries(data.code_files).forEach(([filePath, content], index) => {
+        // 创建标签
+        const tab = document.createElement('div');
+        tab.className = `tab ${index === 0 ? 'active' : ''}`;
+        tab.textContent = getBasename(filePath);
+        tab.onclick = () => switchTab(index);
+        tabsDiv.appendChild(tab);
+        
+        // 创建内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = `tab-content ${index === 0 ? 'active' : ''}`;
+        contentDiv.innerHTML = `
           <div class="file-item">
             <h3>${filePath}</h3>
             <div class="code-display">${content}</div>
           </div>
         `;
-      }
+        tabContentsDiv.appendChild(contentDiv);
+      });
 
-      // Display migrations
-      html += '<h3>表迁移:</h3>';
-      data.table_migrations.forEach((migration, index) => {
-        html += `
+      // 显示迁移信息
+      if (data.table_migrations && data.table_migrations.length > 0) {
+        const migrationsTab = document.createElement('div');
+        migrationsTab.className = 'tab';
+        migrationsTab.textContent = 'Migrations';
+        migrationsTab.onclick = () => switchTab(Object.keys(data.code_files).length);
+        tabsDiv.appendChild(migrationsTab);
+
+        const migrationsContent = document.createElement('div');
+        migrationsContent.className = 'tab-content';
+        migrationsContent.innerHTML = data.table_migrations.map((migration, index) => `
           <div class="migration-item">
             <h4>迁移 #${index + 1}</h4>
             <div class="code-display">
@@ -246,33 +315,55 @@
               ${migration.reversed_sql}
             </div>
           </div>
-        `;
-      });
+        `).join('');
+        tabContentsDiv.appendChild(migrationsContent);
+      }
 
-      generatedCodeDiv.innerHTML = html;
       resultSection.style.display = 'block';
     }
 
-    async function saveToConfig() {
+    function switchTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+      
+      contents.forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+    }
+
+    async function writeFiles() {
+      if (!currentGeneratedCode) {
+        alert('没有可写入的代码');
+        return;
+      }
+
       try {
-        const response = await fetch('/api/config/write', {
+        const response = await fetch('/api/write-files', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sqlPaths: ["migrations/001_create_users.sql", "migrations/002_create_posts.sql"],
-            outputPath: "output"
+            code_files: currentGeneratedCode.code_files
           })
         });
-        
-        if (response.ok) {
-          alert('配置已保存');
-        } else {
-          alert('保存配置失败');
+
+        if (!response.ok) {
+          throw new Error('写入文件失败');
         }
+
+        alert('文件写入成功');
       } catch (error) {
-        console.error('Error saving config:', error);
-        alert('保存配置时发生错误');
+        console.error('Error writing files:', error);
+        alert('写入文件时发生错误: ' + error.message);
       }
+    }
+
+    // 辅助函数：获取文件名
+    function getBasename(filePath) {
+      return filePath.split('/').pop();
     }
   </script>
 </body>
