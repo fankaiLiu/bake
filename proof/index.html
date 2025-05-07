@@ -45,7 +45,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <h2 class="text-xl font-semibold mb-4">需求输入</h2>
         <textarea id="requirements" 
-                  class="w-full h-48 p-4 mb-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
+                  class="w-full h-64 p-4 mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
                   placeholder="请输入您的SQL需求..."></textarea>
         <div class="flex gap-3">
           <button id="generateBtn" onclick="generateCode()" 
@@ -58,7 +58,7 @@
 
     <!-- Right Panel -->
     <div class="flex-1 p-4 overflow-y-auto">
-      <div id="resultSection" class="hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div id="resultSection" class="hidden bg-gray-50 dark:bg-gray-900 rounded-xl shadow p-6">
         <h2 class="text-xl font-semibold mb-4">生成结果</h2>
         
         <!-- Tabs -->
@@ -152,9 +152,9 @@
         contentDiv.className = `tab-content ${index === 0 ? 'block' : 'hidden'}`;
         const languageClass = getLanguageClass(filePath);
         contentDiv.innerHTML = `
-          <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+          <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow">
             <h3 class="text-lg font-medium text-apple-blue mb-2">${filePath}</h3>
-            <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto max-h-[400px] overflow-y-auto"><code class="${languageClass}">${content}</code></pre>
+            <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto"><code class="${languageClass}">${content}</code></pre>
           </div>
         `;
         tabContentsDiv.appendChild(contentDiv);
@@ -170,16 +170,16 @@
         const migrationsContent = document.createElement('div');
         migrationsContent.className = 'tab-content hidden';
         migrationsContent.innerHTML = data.table_migrations.map((migration, index) => `
-          <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+          <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow">
             <h4 class="text-lg font-medium mb-2">迁移 #${index + 1}</h4>
             <div class="space-y-4">
               <div>
                 <div class="font-medium mb-1">原始SQL:</div>
-                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto"><code class="language-sql">${migration.original_sql}</code></pre>
+                <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto"><code class="language-sql">${migration.original_sql}</code></pre>
               </div>
               <div>
                 <div class="font-medium mb-1">反向SQL:</div>
-                <pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto"><code class="language-sql">${migration.reversed_sql}</code></pre>
+                <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto"><code class="language-sql">${migration.reversed_sql}</code></pre>
               </div>
             </div>
           </div>
