@@ -1,6 +1,5 @@
 {
-  "sqlPaths": [
-    "proof"
-  ],
-  "outputPath": "test1/test12"
+  "sqlPaths": "proof",
+  "rustOutputPath": "proof",
+  "frontendOutputPath": "test1/test12"
 }

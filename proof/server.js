@@ -10,8 +10,9 @@ import path from 'path'; // Import path for joining paths
 
 // 默认配置
 const DEFAULT_CONFIG = {
-  sqlPaths: [],
-  outputPath: ""
+  sqlPaths: "",
+  rustOutputPath: "",
+  frontendOutputPath: ""
 };
 
 // 确保配置文件存在
@@ -85,7 +86,9 @@ const server = Bun.serve({
     if (url.pathname === "/api/config/write" && req.method === "POST") {
       const config = await req.json();
       // Basic validation: ensure paths are strings
-      if (!Array.isArray(config.sqlPaths) || typeof config.outputPath !== 'string') {
+      if (typeof config.sqlPaths !== 'string' || 
+          typeof config.rustOutputPath !== 'string' || 
+          typeof config.frontendOutputPath !== 'string') {
          return Response.json({ success: false, error: "Invalid config format" }, { status: 400 });
       }
       
@@ -100,13 +103,12 @@ const server = Bun.serve({
         return path.relative(currentWorkingDirectory, absolutePath);
       };
       
-      // 转换sqlPaths中的所有路径
-      config.sqlPaths = config.sqlPaths
-        .filter(p => typeof p === 'string')
-        .map(convertToRelativePath);
+      // 转换sqlPaths
+      config.sqlPaths = convertToRelativePath(config.sqlPaths);
       
-      // 转换outputPath
-      config.outputPath = convertToRelativePath(config.outputPath);
+      // 转换输出路径
+      config.rustOutputPath = convertToRelativePath(config.rustOutputPath);
+      config.frontendOutputPath = convertToRelativePath(config.frontendOutputPath);
 
       await Bun.write("bake_config.json", JSON.stringify(config, null, 2));
       return Response.json({ success: true });
@@ -196,6 +198,36 @@ const server = Bun.serve({
           error: "列出目录失败",
           message: error.message
         }, { status: 500 });
+      }
+    }
+    
+    // 代码生成 API
+    if (url.pathname === "/api/generate" && req.method === "POST") {
+      try {
+        const { requirements } = await req.json();
+        
+        // Mock response for now
+        const response = {
+          code_files: {
+            "migrations/001_create_users.sql": "CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));",
+            "migrations/002_create_posts.sql": "CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(255));"
+          },
+          table_migrations: [
+            {
+              original_sql: "CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));",
+              reversed_sql: "DROP TABLE users;"
+            },
+            {
+              original_sql: "CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(255));",
+              reversed_sql: "DROP TABLE posts;"
+            }
+          ]
+        };
+
+        return Response.json(response);
+      } catch (error) {
+        console.error("代码生成错误:", error);
+        return Response.json({ error: "代码生成失败", message: error.message }, { status: 500 });
       }
     }
     

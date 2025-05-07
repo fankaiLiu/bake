@@ -2,45 +2,278 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>本地文件读写</title>
+  <title>SQL Code Generator</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    textarea { width: 100%; height: 200px; margin: 10px 0; }
-    button { padding: 10px 15px; margin-right: 10px; }
-    .nav { margin-bottom: 20px; }
-    .nav a { text-decoration: none; color: #0071e3; }
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #1e40af;
+      --background-color: #f8fafc;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+      --card-background: white;
+      --code-background: #1e1e1e;
+      --code-text: #d4d4d4;
+      --file-item-background: #f8fafc;
+      --migration-item-background: #f1f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary-color: #3b82f6;
+        --secondary-color: #60a5fa;
+        --background-color: #0f172a;
+        --text-color: #e2e8f0;
+        --border-color: #334155;
+        --card-background: #1e293b;
+        --code-background: #0f172a;
+        --code-text: #e2e8f0;
+        --file-item-background: #1e293b;
+        --migration-item-background: #334155;
+      }
+    }
+
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      background: var(--card-background);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .nav {
+      margin-bottom: 24px;
+      padding: 12px;
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--primary-color);
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .nav a:hover {
+      background-color: var(--migration-item-background);
+    }
+
+    h1 {
+      color: var(--text-color);
+      margin-bottom: 24px;
+      font-size: 2rem;
+    }
+
+    .section {
+      margin-bottom: 32px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      color: var(--text-color);
+      font-size: 1.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin: 10px 0;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-family: monospace;
+      resize: vertical;
+      background-color: var(--card-background);
+      color: var(--text-color);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    button.secondary {
+      background-color: #64748b;
+    }
+
+    button.secondary:hover {
+      background-color: #475569;
+    }
+
+    .code-display {
+      background: var(--code-background);
+      color: var(--code-text);
+      padding: 16px;
+      border-radius: 6px;
+      font-family: 'Consolas', monospace;
+      white-space: pre-wrap;
+      margin: 16px 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--file-item-background);
+      border-radius: 6px;
+    }
+
+    .file-item h3 {
+      margin: 0 0 8px 0;
+      color: var(--primary-color);
+    }
+
+    .migration-item {
+      margin: 12px 0;
+      padding: 12px;
+      background: var(--migration-item-background);
+      border-radius: 6px;
+    }
+
+    .migration-item h4 {
+      margin: 0 0 8px 0;
+      color: var(--text-color);
+    }
   </style>
 </head>
 <body>
   <div class="nav">
     <a href="config.html">转到配置页面</a>
   </div>
-  <h1>本地文件读写</h1>
-  <textarea id="content"></textarea>
-  <div>
-    <button onclick="readFile()">读取文件</button>
-    <button onclick="writeFile()">保存文件</button>
+
+  <div class="container">
+    <h1>SQL Code Generator</h1>
+
+    <div class="section">
+      <h2>需求输入</h2>
+      <textarea id="requirements" placeholder="请输入您的SQL需求..."></textarea>
+      <div class="button-group">
+        <button onclick="generateCode()">生成代码</button>
+      </div>
+    </div>
+
+    <div class="section" id="resultSection" style="display: none;">
+      <h2>生成结果</h2>
+      <div id="generatedCode"></div>
+      <div class="button-group">
+        <button onclick="saveToConfig()">保存到配置</button>
+      </div>
+    </div>
   </div>
   
   <script>
-    async function readFile() {
-      const response = await fetch('/api/read');
-      const data = await response.json();
-      document.getElementById('content').value = data.content;
+    async function generateCode() {
+      const requirements = document.getElementById('requirements').value;
+      
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requirements })
+        });
+
+        if (!response.ok) {
+          throw new Error('生成代码失败');
+        }
+
+        const data = await response.json();
+        displayGeneratedCode(data);
+      } catch (error) {
+        console.error('Error generating code:', error);
+        alert('生成代码时发生错误: ' + error.message);
+      }
     }
-    
-    async function writeFile() {
-      const content = document.getElementById('content').value;
-      await fetch('/api/write', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
+
+    function displayGeneratedCode(data) {
+      const resultSection = document.getElementById('resultSection');
+      const generatedCodeDiv = document.getElementById('generatedCode');
+      
+      let html = '<h3>生成的文件:</h3>';
+      
+      // Display code files
+      for (const [filePath, content] of Object.entries(data.code_files)) {
+        html += `
+          <div class="file-item">
+            <h3>${filePath}</h3>
+            <div class="code-display">${content}</div>
+          </div>
+        `;
+      }
+
+      // Display migrations
+      html += '<h3>表迁移:</h3>';
+      data.table_migrations.forEach((migration, index) => {
+        html += `
+          <div class="migration-item">
+            <h4>迁移 #${index + 1}</h4>
+            <div class="code-display">
+              <strong>原始SQL:</strong>
+              ${migration.original_sql}
+              
+              <strong>反向SQL:</strong>
+              ${migration.reversed_sql}
+            </div>
+          </div>
+        `;
       });
-      alert('文件已保存');
+
+      generatedCodeDiv.innerHTML = html;
+      resultSection.style.display = 'block';
     }
-    
-    // 页面加载时读取文件
-    readFile();
+
+    async function saveToConfig() {
+      try {
+        const response = await fetch('/api/config/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sqlPaths: ["migrations/001_create_users.sql", "migrations/002_create_posts.sql"],
+            outputPath: "output"
+          })
+        });
+        
+        if (response.ok) {
+          alert('配置已保存');
+        } else {
+          alert('保存配置失败');
+        }
+      } catch (error) {
+        console.error('Error saving config:', error);
+        alert('保存配置时发生错误');
+      }
+    }
   </script>
 </body>
 </html>
