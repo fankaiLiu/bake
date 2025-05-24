@@ -151,12 +151,27 @@
         const contentDiv = document.createElement('div');
         contentDiv.className = `tab-content ${index === 0 ? 'block' : 'hidden'}`;
         const languageClass = getLanguageClass(filePath);
-        contentDiv.innerHTML = `
-          <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow">
-            <h3 class="text-lg font-medium text-apple-blue mb-2">${filePath}</h3>
-            <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto"><code class="${languageClass}">${content}</code></pre>
-          </div>
-        `;
+        
+        // 创建代码块结构，确保内容被正确转义
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+        
+        const titleElement = document.createElement('h3');
+        titleElement.className = 'text-lg font-medium text-apple-blue mb-2';
+        titleElement.textContent = filePath;
+        
+        const preElement = document.createElement('pre');
+        preElement.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
+        
+        const codeElement = document.createElement('code');
+        codeElement.className = languageClass;
+        codeElement.textContent = content; // 使用textContent确保内容被正确转义
+        
+        preElement.appendChild(codeElement);
+        wrapperDiv.appendChild(titleElement);
+        wrapperDiv.appendChild(preElement);
+        contentDiv.appendChild(wrapperDiv);
+        
         tabContentsDiv.appendChild(contentDiv);
       });
 
@@ -169,21 +184,52 @@
 
         const migrationsContent = document.createElement('div');
         migrationsContent.className = 'tab-content hidden';
-        migrationsContent.innerHTML = data.table_migrations.map((migration, index) => `
-          <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow">
-            <h4 class="text-lg font-medium mb-2">迁移 #${index + 1}</h4>
-            <div class="space-y-4">
-              <div>
-                <div class="font-medium mb-1">原始SQL:</div>
-                <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto"><code class="language-sql">${migration.original_sql}</code></pre>
-              </div>
-              <div>
-                <div class="font-medium mb-1">反向SQL:</div>
-                <pre class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto"><code class="language-sql">${migration.reversed_sql}</code></pre>
-              </div>
-            </div>
-          </div>
-        `).join('');
+        
+        data.table_migrations.forEach((migration, index) => {
+          const migrationDiv = document.createElement('div');
+          migrationDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+          
+          const titleElement = document.createElement('h4');
+          titleElement.className = 'text-lg font-medium mb-2';
+          titleElement.textContent = `迁移 #${index + 1}`;
+          
+          const spaceDiv = document.createElement('div');
+          spaceDiv.className = 'space-y-4';
+          
+          // 原始SQL部分
+          const originalDiv = document.createElement('div');
+          const originalLabel = document.createElement('div');
+          originalLabel.className = 'font-medium mb-1';
+          originalLabel.textContent = '原始SQL:';
+          const originalPre = document.createElement('pre');
+          originalPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto';
+          const originalCode = document.createElement('code');
+          originalCode.className = 'language-sql';
+          originalCode.textContent = migration.original_sql;
+          originalPre.appendChild(originalCode);
+          originalDiv.appendChild(originalLabel);
+          originalDiv.appendChild(originalPre);
+          
+          // 反向SQL部分
+          const reversedDiv = document.createElement('div');
+          const reversedLabel = document.createElement('div');
+          reversedLabel.className = 'font-medium mb-1';
+          reversedLabel.textContent = '反向SQL:';
+          const reversedPre = document.createElement('pre');
+          reversedPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto';
+          const reversedCode = document.createElement('code');
+          reversedCode.className = 'language-sql';
+          reversedCode.textContent = migration.reversed_sql;
+          reversedPre.appendChild(reversedCode);
+          reversedDiv.appendChild(reversedLabel);
+          reversedDiv.appendChild(reversedPre);
+          
+          spaceDiv.appendChild(originalDiv);
+          spaceDiv.appendChild(reversedDiv);
+          migrationDiv.appendChild(titleElement);
+          migrationDiv.appendChild(spaceDiv);
+          migrationsContent.appendChild(migrationDiv);
+        });
         tabContentsDiv.appendChild(migrationsContent);
       }
 
