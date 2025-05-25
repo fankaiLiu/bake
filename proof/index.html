@@ -9,6 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -52,6 +53,10 @@
                   class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
             生成代码
           </button>
+          <button id="clearBtn" onclick="clearRequirements()" 
+                  class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+            清空
+          </button>
         </div>
       </div>
     </div>
@@ -59,7 +64,13 @@
     <!-- Right Panel -->
     <div class="flex-1 p-4 overflow-y-auto">
       <div id="resultSection" class="hidden bg-gray-50 dark:bg-gray-900 rounded-xl shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">生成结果</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">生成结果</h2>
+          <button id="copyBtn" onclick="copyCurrentTab()" 
+                  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+            复制当前Tab
+          </button>
+        </div>
         
         <!-- Tabs -->
         <div id="tabs" class="flex gap-1 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"></div>
@@ -89,6 +100,53 @@
 
   <script>
     let currentGeneratedCode = null;
+    let currentActiveTabIndex = 0;
+
+    function clearRequirements() {
+      document.getElementById('requirements').value = '';
+    }
+
+    async function copyCurrentTab() {
+      const tabs = document.querySelectorAll('#tabs > div');
+      const contents = document.querySelectorAll('.tab-content');
+      
+      if (currentActiveTabIndex >= 0 && currentActiveTabIndex < contents.length) {
+        const activeContent = contents[currentActiveTabIndex];
+        const codeElements = activeContent.querySelectorAll('code');
+        
+        if (codeElements.length > 0) {
+          try {
+            // 如果有多个code元素（如合并的SQL），将它们连接起来
+            let textToCopy = '';
+            codeElements.forEach((codeElement, index) => {
+              if (index > 0) textToCopy += '\n\n-- ========================================\n\n';
+              textToCopy += codeElement.textContent;
+            });
+            
+            await navigator.clipboard.writeText(textToCopy);
+            Swal.fire({
+              icon: 'success',
+              title: '复制成功',
+              text: '代码已复制到剪贴板',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          } catch (err) {
+            Swal.fire({
+              icon: 'error',
+              title: '复制失败',
+              text: '无法复制到剪贴板'
+            });
+          }
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: '无内容',
+            text: '当前Tab没有可复制的内容'
+          });
+        }
+      }
+    }
 
     function showLoading() {
       document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -128,7 +186,11 @@
         hideLoading();
       } catch (error) {
         console.error('Error generating code:', error);
-        alert('生成代码时发生错误: ' + error.message);
+        Swal.fire({
+          icon: 'error',
+          title: '生成失败',
+          text: '生成代码时发生错误: ' + error.message
+        });
         hideLoading();
       }
     }
@@ -140,16 +202,19 @@
       
       tabsDiv.innerHTML = '';
       tabContentsDiv.innerHTML = '';
+      currentActiveTabIndex = 0;
+      let tabIndex = 0;
 
-      Object.entries(data.code_files).forEach(([filePath, content], index) => {
+      // 添加代码文件tabs
+      Object.entries(data.code_files).forEach(([filePath, content]) => {
         const tab = document.createElement('div');
-        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${index === 0 ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
+        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${tabIndex === 0 ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
         tab.textContent = getBasename(filePath);
-        tab.onclick = () => switchTab(index);
+        tab.onclick = () => switchTab(tabIndex);
         tabsDiv.appendChild(tab);
 
         const contentDiv = document.createElement('div');
-        contentDiv.className = `tab-content ${index === 0 ? 'block' : 'hidden'}`;
+        contentDiv.className = `tab-content ${tabIndex === 0 ? 'block' : 'hidden'}`;
         const languageClass = getLanguageClass(filePath);
         
         // 创建代码块结构，确保内容被正确转义
@@ -173,64 +238,76 @@
         contentDiv.appendChild(wrapperDiv);
         
         tabContentsDiv.appendChild(contentDiv);
+        tabIndex++;
       });
 
+      // 如果有migrations，创建两个合并的tabs：原始SQL和反向SQL
       if (data.table_migrations && data.table_migrations.length > 0) {
-        const migrationsTab = document.createElement('div');
-        migrationsTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
-        migrationsTab.textContent = 'Migrations';
-        migrationsTab.onclick = () => switchTab(Object.keys(data.code_files).length);
-        tabsDiv.appendChild(migrationsTab);
+        // 原始SQL tab（合并所有原始SQL）
+        const originalTab = document.createElement('div');
+        originalTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+        originalTab.textContent = '原始SQL';
+        originalTab.onclick = () => switchTab(tabIndex);
+        tabsDiv.appendChild(originalTab);
 
-        const migrationsContent = document.createElement('div');
-        migrationsContent.className = 'tab-content hidden';
+        const originalContent = document.createElement('div');
+        originalContent.className = 'tab-content hidden';
         
-        data.table_migrations.forEach((migration, index) => {
-          const migrationDiv = document.createElement('div');
-          migrationDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
-          
-          const titleElement = document.createElement('h4');
-          titleElement.className = 'text-lg font-medium mb-2';
-          titleElement.textContent = `迁移 #${index + 1}`;
-          
-          const spaceDiv = document.createElement('div');
-          spaceDiv.className = 'space-y-4';
-          
-          // 原始SQL部分
+        // 合并所有原始SQL
+        data.table_migrations.forEach((migration, migrationIndex) => {
           const originalDiv = document.createElement('div');
-          const originalLabel = document.createElement('div');
-          originalLabel.className = 'font-medium mb-1';
-          originalLabel.textContent = '原始SQL:';
+          originalDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+          
+          const originalTitle = document.createElement('h4');
+          originalTitle.className = 'text-lg font-medium mb-2';
+          originalTitle.textContent = `迁移 #${migrationIndex + 1} - 原始SQL`;
+          
           const originalPre = document.createElement('pre');
-          originalPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto';
+          originalPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
           const originalCode = document.createElement('code');
           originalCode.className = 'language-sql';
           originalCode.textContent = migration.original_sql;
           originalPre.appendChild(originalCode);
-          originalDiv.appendChild(originalLabel);
+          originalDiv.appendChild(originalTitle);
           originalDiv.appendChild(originalPre);
-          
-          // 反向SQL部分
+          originalContent.appendChild(originalDiv);
+        });
+        
+        tabContentsDiv.appendChild(originalContent);
+        tabIndex++;
+
+        // 反向SQL tab（合并所有反向SQL）
+        const reversedTab = document.createElement('div');
+        reversedTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+        reversedTab.textContent = '反向SQL';
+        reversedTab.onclick = () => switchTab(tabIndex);
+        tabsDiv.appendChild(reversedTab);
+
+        const reversedContent = document.createElement('div');
+        reversedContent.className = 'tab-content hidden';
+        
+        // 合并所有反向SQL
+        data.table_migrations.forEach((migration, migrationIndex) => {
           const reversedDiv = document.createElement('div');
-          const reversedLabel = document.createElement('div');
-          reversedLabel.className = 'font-medium mb-1';
-          reversedLabel.textContent = '反向SQL:';
+          reversedDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+          
+          const reversedTitle = document.createElement('h4');
+          reversedTitle.className = 'text-lg font-medium mb-2';
+          reversedTitle.textContent = `迁移 #${migrationIndex + 1} - 反向SQL`;
+          
           const reversedPre = document.createElement('pre');
-          reversedPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto';
+          reversedPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
           const reversedCode = document.createElement('code');
           reversedCode.className = 'language-sql';
           reversedCode.textContent = migration.reversed_sql;
           reversedPre.appendChild(reversedCode);
-          reversedDiv.appendChild(reversedLabel);
+          reversedDiv.appendChild(reversedTitle);
           reversedDiv.appendChild(reversedPre);
-          
-          spaceDiv.appendChild(originalDiv);
-          spaceDiv.appendChild(reversedDiv);
-          migrationDiv.appendChild(titleElement);
-          migrationDiv.appendChild(spaceDiv);
-          migrationsContent.appendChild(migrationDiv);
+          reversedContent.appendChild(reversedDiv);
         });
-        tabContentsDiv.appendChild(migrationsContent);
+        
+        tabContentsDiv.appendChild(reversedContent);
+        tabIndex++;
       }
 
       resultSection.classList.remove('hidden');
@@ -241,6 +318,7 @@
     }
 
     function switchTab(index) {
+      currentActiveTabIndex = index;
       const tabs = document.querySelectorAll('#tabs > div');
       const contents = document.querySelectorAll('.tab-content');
       
@@ -251,11 +329,25 @@
       contents.forEach((content, i) => {
         content.className = `tab-content ${i === index ? 'block' : 'hidden'}`;
       });
+      
+      // 重新应用语法高亮到当前显示的tab
+      setTimeout(() => {
+        const activeContent = contents[index];
+        if (activeContent) {
+          activeContent.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        }
+      }, 10);
     }
 
     async function writeFiles() {
       if (!currentGeneratedCode) {
-        alert('没有可写入的代码');
+        Swal.fire({
+          icon: 'warning',
+          title: '无内容',
+          text: '没有可写入的代码'
+        });
         return;
       }
       showLoading();
@@ -270,11 +362,19 @@
         if (!response.ok) {
           throw new Error('写入文件失败');
         }
-        alert('文件写入成功');
+        Swal.fire({
+          icon: 'success',
+          title: '写入成功',
+          text: '文件写入成功'
+        });
         hideLoading();
       } catch (error) {
         console.error('Error writing files:', error);
-        alert('写入文件时发生错误: ' + error.message);
+        Swal.fire({
+          icon: 'error',
+          title: '写入失败',
+          text: '写入文件时发生错误: ' + error.message
+        });
         hideLoading();
       }
     }

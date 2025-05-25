@@ -22,7 +22,7 @@ backend/
 │   ├── Cargo.toml
 │   └── src/
 │       └── lib.rs      # 配置管理逻辑
-└── domain/                # 包管理
+└── modules/                # 包管理
     ├── Cargo.toml
     └── src/
         ├── lib.rs      # 包管理模块导出
@@ -51,7 +51,7 @@ backend/
   - 应用配置结构定义
   - 配置加载和验证
 
-### domain
+### modules
 - **作用**: 包管理系统
 - **功能**: 
   - 包安装和卸载
