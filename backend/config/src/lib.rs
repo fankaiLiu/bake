@@ -1,18 +1,19 @@
 // 配置管理模块
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;
 use thiserror::Error;
+use serde::{Deserialize, Serialize};
+use toml;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     pub server: ServerConfig,
     pub minio: MinioConfig,
     pub redis: RedisConfig,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     pub port: u16,
     pub db_url: String,
@@ -21,7 +22,7 @@ pub struct ServerConfig {
     pub jwt_exp: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MinioConfig {
     pub access_key: String,
     pub secret_key: String,
@@ -29,7 +30,7 @@ pub struct MinioConfig {
     pub secure: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RedisConfig {
     pub url: String,
     pub max_connections: u32,
@@ -193,171 +194,114 @@ impl AppConfig {
     
     /// 解析TOML内容
     fn parse_toml(content: &str) -> Result<Self, ConfigError> {
-        let mut config = Self::default();
-        let parsed = SimpleTomlParser::parse(content)?;
-        
-        // 解析server配置
-        if let Some(server_table) = parsed.get("server") {
-            if let TomlValue::Table(server) = server_table {
-                if let Some(TomlValue::Integer(port)) = server.get("port") {
-                    config.server.port = *port as u16;
-                }
-                if let Some(TomlValue::String(db_url)) = server.get("db_url") {
-                    config.server.db_url = db_url.clone();
-                }
-                if let Some(TomlValue::String(base_dir)) = server.get("base_dir") {
-                    config.server.base_dir = base_dir.clone();
-                }
-                if let Some(TomlValue::String(secret_key)) = server.get("secret_key") {
-                    config.server.secret_key = secret_key.clone();
-                }
-                if let Some(TomlValue::Integer(jwt_exp)) = server.get("jwt_exp") {
-                    config.server.jwt_exp = *jwt_exp as u64;
-                }
-                
-                // 解析minio配置
-                if let Some(TomlValue::Table(minio)) = server.get("minio") {
-                    if let Some(TomlValue::String(access_key)) = minio.get("access_key") {
-                        config.minio.access_key = access_key.clone();
-                    }
-                    if let Some(TomlValue::String(secret_key)) = minio.get("secret_key") {
-                        config.minio.secret_key = secret_key.clone();
-                    }
-                    if let Some(TomlValue::String(endpoint)) = minio.get("endpoint") {
-                        config.minio.endpoint = endpoint.clone();
-                    }
-                    if let Some(TomlValue::Boolean(secure)) = minio.get("secure") {
-                        config.minio.secure = *secure;
-                    }
-                }
-            }
+        // 定义与 TOML 文件结构匹配的临时结构体
+        #[derive(Deserialize)]
+        struct TomlConfig {
+            server: TomlServerConfig,
+            redis: TomlRedisConfig,
         }
-        
-        // 解析redis配置
-        if let Some(redis_table) = parsed.get("redis") {
-            if let TomlValue::Table(redis) = redis_table {
-                if let Some(TomlValue::String(url)) = redis.get("url") {
-                    config.redis.url = url.clone();
-                }
-                if let Some(TomlValue::Integer(max_connections)) = redis.get("max_connections") {
-                    config.redis.max_connections = *max_connections as u32;
-                }
-            }
+
+        #[derive(Deserialize)]
+        struct TomlServerConfig {
+            port: u16,
+            db_url: String,
+            base_dir: String,
+            secret_key: String,
+            jwt_exp: u64,
+            minio: TomlMinioConfig,
         }
-        
-        Ok(config)
+
+        #[derive(Deserialize)]
+        struct TomlMinioConfig {
+            access_key: String,
+            secret_key: String,
+            endpoint: String,
+            secure: bool,
+        }
+
+        #[derive(Deserialize)]
+        struct TomlRedisConfig {
+            url: String,
+            max_connections: u32,
+        }
+
+        // 使用 toml 库解析
+        let toml_config: TomlConfig = toml::from_str(content)
+            .map_err(|e| ConfigError::ParseError(format!("TOML parse error: {}", e)))?;
+
+        // 转换为 AppConfig
+        Ok(AppConfig {
+            server: ServerConfig {
+                port: toml_config.server.port,
+                db_url: toml_config.server.db_url,
+                base_dir: toml_config.server.base_dir,
+                secret_key: toml_config.server.secret_key,
+                jwt_exp: toml_config.server.jwt_exp,
+            },
+            minio: MinioConfig {
+                access_key: toml_config.server.minio.access_key,
+                secret_key: toml_config.server.minio.secret_key,
+                endpoint: toml_config.server.minio.endpoint,
+                secure: toml_config.server.minio.secure,
+            },
+            redis: RedisConfig {
+                url: toml_config.redis.url,
+                max_connections: toml_config.redis.max_connections,
+            },
+        })
     }
 }
 
-// 简单的TOML解析器
-#[derive(Debug, Clone)]
-enum TomlValue {
-    String(String),
-    Integer(i64),
-    Boolean(bool),
-    Table(HashMap<String, TomlValue>),
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-struct SimpleTomlParser;
+    #[test]
+    fn test_parse_toml() {
+        let toml_content = r#"
+[server]
+port = 5800
+db_url = "postgres://postgres:password@localhost:5432/bread_product"
+base_dir = "./tmp"
+secret_key = "test-secret-key"
+jwt_exp = 2592000
 
-impl SimpleTomlParser {
-    fn parse(content: &str) -> Result<HashMap<String, TomlValue>, ConfigError> {
-        let mut result = HashMap::new();
-        let mut current_table = String::new();
+[server.minio]
+access_key = "minioadmin"
+secret_key = "minioadmin"
+endpoint = "localhost:9000"
+secure = false
+
+[redis]
+url = "redis://localhost:6379"
+max_connections = 10
+"#;
+
+        let config = AppConfig::parse_toml(toml_content).unwrap();
         
-        for line in content.lines() {
-            let line = line.trim();
-            
-            // 跳过空行和注释
-            if line.is_empty() || line.starts_with('#') {
-                continue;
-            }
-            
-            // 处理表头 [section] 或 [section.subsection]
-            if line.starts_with('[') && line.ends_with(']') {
-                current_table = line[1..line.len()-1].to_string();
-                
-                // 处理嵌套表，如 [server.minio]
-                if current_table.contains('.') {
-                    let parts: Vec<&str> = current_table.split('.').collect();
-                    if parts.len() == 2 {
-                        let parent_table = parts[0];
-                        let sub_table = parts[1];
-                        
-                        // 确保父表存在
-                        if !result.contains_key(parent_table) {
-                            result.insert(parent_table.to_string(), TomlValue::Table(HashMap::new()));
-                        }
-                        
-                        // 在父表中创建子表
-                        if let Some(TomlValue::Table(parent)) = result.get_mut(parent_table) {
-                            parent.insert(sub_table.to_string(), TomlValue::Table(HashMap::new()));
-                        }
-                    }
-                } else {
-                    // 简单表
-                    result.insert(current_table.clone(), TomlValue::Table(HashMap::new()));
-                }
-                continue;
-            }
-            
-            // 处理键值对
-            if let Some(eq_pos) = line.find('=') {
-                let key = line[..eq_pos].trim().to_string();
-                let value_str = line[eq_pos + 1..].trim();
-                
-                let value = Self::parse_value(value_str)?;
-                
-                if current_table.is_empty() {
-                    result.insert(key, value);
-                } else if current_table.contains('.') {
-                    // 处理嵌套表的键值对
-                    let parts: Vec<&str> = current_table.split('.').collect();
-                    if parts.len() == 2 {
-                        let parent_table = parts[0];
-                        let sub_table = parts[1];
-                        
-                        if let Some(TomlValue::Table(parent)) = result.get_mut(parent_table) {
-                            if let Some(TomlValue::Table(sub)) = parent.get_mut(sub_table) {
-                                sub.insert(key, value);
-                            }
-                        }
-                    }
-                } else {
-                    // 简单表的键值对
-                    if let Some(TomlValue::Table(table)) = result.get_mut(&current_table) {
-                        table.insert(key, value);
-                    }
-                }
-            }
-        }
+        assert_eq!(config.server.port, 5800);
+        assert_eq!(config.server.db_url, "postgres://postgres:password@localhost:5432/bread_product");
+        assert_eq!(config.server.base_dir, "./tmp");
+        assert_eq!(config.server.secret_key, "test-secret-key");
+        assert_eq!(config.server.jwt_exp, 2592000);
         
-        Ok(result)
+        assert_eq!(config.minio.access_key, "minioadmin");
+        assert_eq!(config.minio.secret_key, "minioadmin");
+        assert_eq!(config.minio.endpoint, "localhost:9000");
+        assert_eq!(config.minio.secure, false);
+        
+        assert_eq!(config.redis.url, "redis://localhost:6379");
+        assert_eq!(config.redis.max_connections, 10);
     }
-    
-    fn parse_value(value_str: &str) -> Result<TomlValue, ConfigError> {
-        let value_str = value_str.trim();
+
+    #[test]
+    fn test_load_from_file() {
+        // 测试从实际配置文件加载
+        let result = AppConfig::load_from_file("../config.toml");
+        assert!(result.is_ok(), "Failed to load config.toml: {:?}", result.err());
         
-        // 字符串值（带引号）
-        if (value_str.starts_with('"') && value_str.ends_with('"')) ||
-           (value_str.starts_with('\'') && value_str.ends_with('\'')) {
-            return Ok(TomlValue::String(value_str[1..value_str.len()-1].to_string()));
-        }
-        
-        // 布尔值
-        if value_str == "true" {
-            return Ok(TomlValue::Boolean(true));
-        }
-        if value_str == "false" {
-            return Ok(TomlValue::Boolean(false));
-        }
-        
-        // 整数
-        if let Ok(int_val) = value_str.parse::<i64>() {
-            return Ok(TomlValue::Integer(int_val));
-        }
-        
-        // 默认作为字符串处理（无引号的字符串）
-        Ok(TomlValue::String(value_str.to_string()))
+        let config = result.unwrap();
+        assert_eq!(config.server.port, 5800);
+        assert!(config.server.db_url.contains("postgres"));
     }
 }
