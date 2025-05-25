@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;
+use thiserror::Error;
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
@@ -32,6 +33,16 @@ pub struct MinioConfig {
 pub struct RedisConfig {
     pub url: String,
     pub max_connections: u32,
+}
+
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("Parse error: {0}")]
+    ParseError(String),
+    #[error("Validation error: {0}")]
+    ValidationError(String),
 }
 
 impl Default for AppConfig {
@@ -71,14 +82,53 @@ impl AppConfig {
         // 然后从环境变量覆盖（环境变量优先）
         config.load_from_env();
         
+        // 验证配置
+        config.validate()?;
+        
         Ok(config)
+    }
+    
+    /// 验证配置的有效性
+    pub fn validate(&self) -> Result<(), ConfigError> {
+        // 验证端口范围
+        if self.server.port == 0 {
+            return Err(ConfigError::ValidationError("Server port cannot be 0".to_string()));
+        }
+        
+        // 验证数据库URL
+        if self.server.db_url.is_empty() || self.server.db_url == "postgres://postgres:xxx@localhost:5432/bread_product" {
+            return Err(ConfigError::ValidationError("Database URL must be configured".to_string()));
+        }
+        
+        // 验证JWT密钥
+        if self.server.secret_key.is_empty() || self.server.secret_key == "xxx" {
+            return Err(ConfigError::ValidationError("JWT secret key must be configured".to_string()));
+        }
+        
+        // 验证Minio配置
+        if self.minio.access_key.is_empty() || self.minio.access_key == "xxx" {
+            return Err(ConfigError::ValidationError("Minio access key must be configured".to_string()));
+        }
+        
+        if self.minio.secret_key.is_empty() || self.minio.secret_key == "xxx" {
+            return Err(ConfigError::ValidationError("Minio secret key must be configured".to_string()));
+        }
+        
+        // 验证Redis URL
+        if self.redis.url.is_empty() {
+            return Err(ConfigError::ValidationError("Redis URL must be configured".to_string()));
+        }
+        
+        if self.redis.max_connections == 0 {
+            return Err(ConfigError::ValidationError("Redis max connections must be greater than 0".to_string()));
+        }
+        
+        Ok(())
     }
     
     /// 从TOML文件加载配置
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| ConfigError::IoError(e.to_string()))?;
-        
+        let content = fs::read_to_string(path)?;
         Self::parse_toml(&content)
     }
     
@@ -196,23 +246,6 @@ impl AppConfig {
     }
 }
 
-#[derive(Debug)]
-pub enum ConfigError {
-    IoError(String),
-    ParseError(String),
-}
-
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigError::IoError(msg) => write!(f, "IO Error: {}", msg),
-            ConfigError::ParseError(msg) => write!(f, "Parse Error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for ConfigError {}
-
 // 简单的TOML解析器
 #[derive(Debug, Clone)]
 enum TomlValue {
@@ -228,7 +261,6 @@ impl SimpleTomlParser {
     fn parse(content: &str) -> Result<HashMap<String, TomlValue>, ConfigError> {
         let mut result = HashMap::new();
         let mut current_table = String::new();
-        let mut current_section: Option<&mut HashMap<String, TomlValue>> = None;
         
         for line in content.lines() {
             let line = line.trim();

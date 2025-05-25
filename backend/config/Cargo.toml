@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 # 内部依赖
 bake-common = { path = "../common" }
+thiserror = "1.0"

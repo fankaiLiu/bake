@@ -1,0 +1,25 @@
+# Bake 应用配置文件示例
+# 复制此文件为 config.toml 并修改相应的配置值
+
+[server]
+port = 5800
+# 数据库连接URL
+db_url = "postgres://postgres:xxx@localhost:5432/bread_product"
+# 基础目录
+base_dir = "./tmp"
+# JWT密钥
+secret_key = "xxx"
+# JWT过期时间（秒）
+jwt_exp = 2592000
+
+# Minio对象存储配置
+[server.minio]
+access_key = "xxx"
+secret_key = "xxx"
+endpoint = "localhost:9000"
+secure = false
+
+# Redis配置
+[redis]
+url = "redis://localhost:6379"
+max_connections = 10 

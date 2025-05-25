@@ -8,6 +8,9 @@ edition = "2021"
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "uuid"] }
 deadpool-redis = "0.10"
 
+# Config
+bake-config = { path = "../config" }
+
 # Re-export workspace dependencies
 tokio = { workspace = true }
 anyhow = { workspace = true }

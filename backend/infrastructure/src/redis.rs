@@ -1,6 +1,34 @@
-use anyhow::Result;
 use deadpool_redis::{Config, Pool, Runtime};
+use thiserror::Error;
 use tracing::info;
+
+#[derive(Error, Debug)]
+pub enum RedisError {
+    #[error("Redis connection error: {0}")]
+    Connection(String),
+    #[error("Redis operation error: {0}")]
+    Operation(String),
+    #[error("Redis pool error: {0}")]
+    Pool(String),
+}
+
+impl From<deadpool_redis::CreatePoolError> for RedisError {
+    fn from(err: deadpool_redis::CreatePoolError) -> Self {
+        RedisError::Pool(err.to_string())
+    }
+}
+
+impl From<deadpool_redis::PoolError> for RedisError {
+    fn from(err: deadpool_redis::PoolError) -> Self {
+        RedisError::Pool(err.to_string())
+    }
+}
+
+impl From<deadpool_redis::redis::RedisError> for RedisError {
+    fn from(err: deadpool_redis::redis::RedisError) -> Self {
+        RedisError::Operation(err.to_string())
+    }
+}
 
 #[derive(Clone)]
 pub struct RedisPool {
@@ -8,7 +36,7 @@ pub struct RedisPool {
 }
 
 impl RedisPool {
-    pub async fn new(redis_url: &str) -> Result<Self> {
+    pub async fn new(redis_url: &str) -> Result<Self, RedisError> {
         info!("Connecting to Redis...");
         
         let cfg = Config::from_url(redis_url);
@@ -29,7 +57,7 @@ impl RedisPool {
         &self.pool
     }
 
-    pub async fn health_check(&self) -> Result<()> {
+    pub async fn health_check(&self) -> Result<(), RedisError> {
         let mut conn = self.pool.get().await?;
         deadpool_redis::redis::cmd("PING")
             .query_async::<_, String>(&mut *conn)

@@ -1,0 +1,19 @@
+# 服务器配置
+[server]
+port = 5800
+db_url = "postgres://postgres:password@localhost:5432/bread_product"
+base_dir = "./tmp"
+secret_key = "your-secret-key-here"
+jwt_exp = 2592000  # 30 days in seconds
+
+# Minio 对象存储配置
+[server.minio]
+access_key = "your-minio-access-key"
+secret_key = "your-minio-secret-key"
+endpoint = "localhost:9000"
+secure = false
+
+# Redis 配置
+[redis]
+url = "redis://localhost:6379"
+max_connections = 10 
