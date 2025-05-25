@@ -1,0 +1,16 @@
+[package]
+name = "infrastructure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "uuid"] }
+deadpool-redis = "0.10"
+
+# Re-export workspace dependencies
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true } 

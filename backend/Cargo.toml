@@ -4,7 +4,8 @@ members = [
     "common",
     "api",
     "config",
-    "pkg", 
+    "domain",
+    "infrastructure",
 ]
 
 [workspace.dependencies]
