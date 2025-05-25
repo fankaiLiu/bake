@@ -202,22 +202,30 @@
       
       tabsDiv.innerHTML = '';
       tabContentsDiv.innerHTML = '';
-      currentActiveTabIndex = 0;
-      let tabIndex = 0;
+      // currentActiveTabIndex will be updated by switchTab.
+      // Resetting the global one explicitly here is fine if displayGeneratedCode is the sole entry point for new content.
+      currentActiveTabIndex = 0; 
+
+      let localTabIndex = 0; // Use a local tabIndex for creation closures
+
+      const inactiveTabBaseClasses = 'px-4 py-2 cursor-pointer rounded-t-lg';
+      const inactiveTabColorClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+      const contentHiddenClass = 'tab-content hidden';
 
       // 添加代码文件tabs
       Object.entries(data.code_files).forEach(([filePath, content]) => {
         const tab = document.createElement('div');
-        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${tabIndex === 0 ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
+        tab.className = `${inactiveTabBaseClasses} ${inactiveTabColorClasses}`; // Start all inactive
         tab.textContent = getBasename(filePath);
-        tab.onclick = () => switchTab(tabIndex);
+        
+        const capturedIndex = localTabIndex;
+        tab.onclick = () => switchTab(capturedIndex);
         tabsDiv.appendChild(tab);
 
         const contentDiv = document.createElement('div');
-        contentDiv.className = `tab-content ${tabIndex === 0 ? 'block' : 'hidden'}`;
+        contentDiv.className = contentHiddenClass; // Start all hidden
         const languageClass = getLanguageClass(filePath);
         
-        // 创建代码块结构，确保内容被正确转义
         const wrapperDiv = document.createElement('div');
         wrapperDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
         
@@ -230,7 +238,7 @@
         
         const codeElement = document.createElement('code');
         codeElement.className = languageClass;
-        codeElement.textContent = content; // 使用textContent确保内容被正确转义
+        codeElement.textContent = content;
         
         preElement.appendChild(codeElement);
         wrapperDiv.appendChild(titleElement);
@@ -238,22 +246,22 @@
         contentDiv.appendChild(wrapperDiv);
         
         tabContentsDiv.appendChild(contentDiv);
-        tabIndex++;
+        localTabIndex++;
       });
 
-      // 如果有migrations，创建两个合并的tabs：原始SQL和反向SQL
+      // 如果有migrations，创建两个合并的tabs
       if (data.table_migrations && data.table_migrations.length > 0) {
-        // 原始SQL tab（合并所有原始SQL）
+        // 原始SQL tab
         const originalTab = document.createElement('div');
-        originalTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+        originalTab.className = `${inactiveTabBaseClasses} ${inactiveTabColorClasses}`; // Start inactive
         originalTab.textContent = '原始SQL';
-        originalTab.onclick = () => switchTab(tabIndex);
+        let capturedIndexForOriginal = localTabIndex;
+        originalTab.onclick = () => switchTab(capturedIndexForOriginal);
         tabsDiv.appendChild(originalTab);
 
         const originalContent = document.createElement('div');
-        originalContent.className = 'tab-content hidden';
+        originalContent.className = contentHiddenClass; // Start hidden
         
-        // 合并所有原始SQL
         data.table_migrations.forEach((migration, migrationIndex) => {
           const originalDiv = document.createElement('div');
           originalDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
@@ -274,19 +282,19 @@
         });
         
         tabContentsDiv.appendChild(originalContent);
-        tabIndex++;
+        localTabIndex++;
 
-        // 反向SQL tab（合并所有反向SQL）
+        // 反向SQL tab
         const reversedTab = document.createElement('div');
-        reversedTab.className = 'px-4 py-2 cursor-pointer rounded-t-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+        reversedTab.className = `${inactiveTabBaseClasses} ${inactiveTabColorClasses}`; // Start inactive
         reversedTab.textContent = '反向SQL';
-        reversedTab.onclick = () => switchTab(tabIndex);
+        let capturedIndexForReversed = localTabIndex;
+        reversedTab.onclick = () => switchTab(capturedIndexForReversed);
         tabsDiv.appendChild(reversedTab);
 
         const reversedContent = document.createElement('div');
-        reversedContent.className = 'tab-content hidden';
+        reversedContent.className = contentHiddenClass; // Start hidden
         
-        // 合并所有反向SQL
         data.table_migrations.forEach((migration, migrationIndex) => {
           const reversedDiv = document.createElement('div');
           reversedDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
@@ -307,38 +315,65 @@
         });
         
         tabContentsDiv.appendChild(reversedContent);
-        tabIndex++;
+        localTabIndex++;
       }
 
-      resultSection.classList.remove('hidden');
-      // Initialize syntax highlighting
-      document.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
+      if (tabsDiv.children.length > 0) {
+        resultSection.classList.remove('hidden');
+        switchTab(0); // Activate the first tab
+      } else {
+        resultSection.classList.add('hidden'); // No tabs, hide section
+        currentActiveTabIndex = -1; // Indicate no active tab
+      }
+      // Syntax highlighting is now handled by switchTab for the active tab.
+      // The old loop below is removed:
+      // document.querySelectorAll('pre code').forEach((block) => {
+      //   hljs.highlightElement(block);
+      // });
     }
 
     function switchTab(index) {
-      currentActiveTabIndex = index;
       const tabs = document.querySelectorAll('#tabs > div');
       const contents = document.querySelectorAll('.tab-content');
+
+      // Guard against invalid index, though with correct assignment this should not happen.
+      if (index < 0 || index >= tabs.length) {
+        console.warn('SwitchTab called with invalid index:', index);
+        return;
+      }
       
+      currentActiveTabIndex = index;
+      
+      const activeTabClasses = 'px-4 py-2 cursor-pointer rounded-t-lg bg-apple-blue text-white';
+      const inactiveTabBaseClasses = 'px-4 py-2 cursor-pointer rounded-t-lg';
+      const inactiveTabColorClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+
       tabs.forEach((tab, i) => {
-        tab.className = `px-4 py-2 cursor-pointer rounded-t-lg ${i === index ? 'bg-apple-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`;
+        if (i === index) {
+          tab.className = activeTabClasses;
+        } else {
+          tab.className = `${inactiveTabBaseClasses} ${inactiveTabColorClasses}`;
+        }
       });
       
       contents.forEach((content, i) => {
         content.className = `tab-content ${i === index ? 'block' : 'hidden'}`;
       });
       
-      // 重新应用语法高亮到当前显示的tab
-      setTimeout(() => {
-        const activeContent = contents[index];
+      // Re-apply syntax highlighting to the currently displayed tab
+      requestAnimationFrame(() => {
+        const activeContent = contents[index]; // contents NodeList is from the outer scope of switchTab
         if (activeContent) {
           activeContent.querySelectorAll('pre code').forEach((block) => {
+            // To prevent re-highlighting already processed blocks by hljs,
+            // we can remove 'hljs' class and any children it added before re-applying.
+            // However, hljs.highlightElement is generally idempotent or handles this.
+            // For simplicity, direct re-highlighting is often fine.
+            // If issues persist or for optimization, one might clear previous hljs state on the block.
             hljs.highlightElement(block);
           });
         }
-      }, 10);
+      });
     }
 
     async function writeFiles() {
