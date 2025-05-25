@@ -1,14 +1,9 @@
-import './App.css';
-import { Button } from "@/components/ui/button"
+import "./styles/globals.css"
+import { RouterProvider } from "react-router-dom"
+import { router } from "./router"
 
 const App = () => {
-  return (
-    <div className="content">
-      <h1>Rsbuild with React</h1>
-      <p>Start building amazing things with Rsbuild.</p>
-      <Button variant="outline">Button</Button>
-    </div>
-  );
-};
+  return <RouterProvider router={router} />
+}
 
-export default App;
+export default App
