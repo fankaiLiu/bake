@@ -1,0 +1,25 @@
+# Bake 应用配置文件
+# 基于 config.toml.example 创建，使用有效的配置值
+
+[server]
+port = 5800
+# 数据库连接URL - 请根据你的实际数据库配置修改
+db_url = "postgres://postgres:password@localhost:5432/bread_product"
+# 基础目录
+base_dir = "./tmp"
+# JWT密钥 - 生产环境请使用更安全的密钥
+secret_key = "your-secret-key-change-this-in-production"
+# JWT过期时间（秒）
+jwt_exp = 2592000
+
+# Minio对象存储配置
+[server.minio]
+access_key = "minioadmin"
+secret_key = "minioadmin"
+endpoint = "localhost:9000"
+secure = false
+
+# Redis配置
+[redis]
+url = "redis://localhost:6379"
+max_connections = 10 

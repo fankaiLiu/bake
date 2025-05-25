@@ -74,6 +74,9 @@ impl AppConfig {
     pub fn load() -> Result<Self, ConfigError> {
         let mut config = Self::default();
         
+        //打印一下读取的途径
+        println!("读取的途径: {:?}", env::current_dir().unwrap());
+        
         // 首先尝试从配置文件加载
         if let Ok(file_config) = Self::load_from_file("config.toml") {
             config = file_config;
@@ -270,10 +273,31 @@ impl SimpleTomlParser {
                 continue;
             }
             
-            // 处理表头 [section]
+            // 处理表头 [section] 或 [section.subsection]
             if line.starts_with('[') && line.ends_with(']') {
                 current_table = line[1..line.len()-1].to_string();
-                result.insert(current_table.clone(), TomlValue::Table(HashMap::new()));
+                
+                // 处理嵌套表，如 [server.minio]
+                if current_table.contains('.') {
+                    let parts: Vec<&str> = current_table.split('.').collect();
+                    if parts.len() == 2 {
+                        let parent_table = parts[0];
+                        let sub_table = parts[1];
+                        
+                        // 确保父表存在
+                        if !result.contains_key(parent_table) {
+                            result.insert(parent_table.to_string(), TomlValue::Table(HashMap::new()));
+                        }
+                        
+                        // 在父表中创建子表
+                        if let Some(TomlValue::Table(parent)) = result.get_mut(parent_table) {
+                            parent.insert(sub_table.to_string(), TomlValue::Table(HashMap::new()));
+                        }
+                    }
+                } else {
+                    // 简单表
+                    result.insert(current_table.clone(), TomlValue::Table(HashMap::new()));
+                }
                 continue;
             }
             
@@ -286,7 +310,21 @@ impl SimpleTomlParser {
                 
                 if current_table.is_empty() {
                     result.insert(key, value);
+                } else if current_table.contains('.') {
+                    // 处理嵌套表的键值对
+                    let parts: Vec<&str> = current_table.split('.').collect();
+                    if parts.len() == 2 {
+                        let parent_table = parts[0];
+                        let sub_table = parts[1];
+                        
+                        if let Some(TomlValue::Table(parent)) = result.get_mut(parent_table) {
+                            if let Some(TomlValue::Table(sub)) = parent.get_mut(sub_table) {
+                                sub.insert(key, value);
+                            }
+                        }
+                    }
                 } else {
+                    // 简单表的键值对
                     if let Some(TomlValue::Table(table)) = result.get_mut(&current_table) {
                         table.insert(key, value);
                     }

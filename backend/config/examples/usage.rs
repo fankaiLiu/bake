@@ -8,10 +8,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("服务器端口: {}", config.server.port);
     println!("数据库URL: {}", config.server.db_url);
     println!("基础目录: {}", config.server.base_dir);
+    println!("JWT密钥: {}", config.server.secret_key);
     println!("JWT过期时间: {} 秒", config.server.jwt_exp);
     
     println!("\nMinio配置:");
     println!("访问密钥: {}", config.minio.access_key);
+    println!("秘密密钥: {}", config.minio.secret_key);
     println!("端点: {}", config.minio.endpoint);
     println!("安全连接: {}", config.minio.secure);
     
