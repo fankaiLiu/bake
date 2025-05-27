@@ -1,5 +1,12 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@layer tailwind-base,semi,tailwind-components,tailwind-utils;
+@layer tailwind-base{
+    @import "tailwindcss/preflight.css";
+    @import "tailwindcss/theme.css";
+}
+@layer tailwind-utils {
+    @import "tailwindcss/utilities.css";
+}
+@import "tw-animate-css"; 
 
 @custom-variant dark (&:is(.dark *));
 
