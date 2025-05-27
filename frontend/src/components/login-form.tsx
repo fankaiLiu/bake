@@ -1,8 +1,10 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { cn } from "@/lib/utils"
 import { 
   IconAlertTriangle, 
@@ -20,6 +22,7 @@ import {
  * - 完整的状态管理和错误处理
  * - 响应式设计和加载状态
  * - 自动路由重定向
+ * - 多语言支持 (中文/英文)
  * 
  * 用法:
  * <LoginForm className="custom-styles" />
@@ -28,6 +31,8 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { t } = useTranslation();
+  
   // 状态管理
   const [formData, setFormData] = useState({
     email: "",
@@ -59,18 +64,18 @@ export function LoginForm({
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       if (!formData.email || !formData.password) {
-        throw new Error('邮箱和密码不能为空')
+        throw new Error(t('Email and password cannot be empty'))
       }
       
       if (formData.password.length < 6) {
-        throw new Error('密码长度至少为6位')
+        throw new Error(t('Password must be at least 6 characters long'))
       }
 
       // 登录成功，保持在登录页面或者跳转到其他页面
-      console.log('登录成功:', formData.email)
-      setError('登录功能演示完成')
+      console.log(t('Login successful') + ':', formData.email)
+      setError(t('Login demo completed'))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败，请检查邮箱和密码")
+      setError(err instanceof Error ? err.message : t('Login failed, please check your email and password'))
     } finally {
       setIsLoading(false)
     }
@@ -92,9 +97,9 @@ export function LoginForm({
       console.log(`Initiating ${provider} login...`)
       
       // 暂时显示提示信息
-      setError(`${provider} 登录功能正在开发中`)
+      setError(t(`${provider} login is under development`))
     } catch (err) {
-      setError(`${provider} 登录失败`)
+      setError(t(`${provider} login failed`))
     } finally {
       setIsLoading(false)
     }
@@ -102,13 +107,18 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      {/* 语言切换器 */}
+      <div className="flex justify-end">
+        <LanguageSwitcher />
+      </div>
+      
       <Card className="shadow-lg border-border/50">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-            欢迎回到 Bake
+            {t('Welcome back to Bake')}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            使用您的账户登录，开始 AI 友好的开发之旅
+            {t('Sign in with your account to start your AI-friendly development journey')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -135,7 +145,7 @@ export function LoginForm({
                 ) : (
                   <IconBrandApple className="h-5 w-5" />
                 )}
-                <span className="ml-2">使用 Apple 登录</span>
+                <span className="ml-2">{t('Sign in with Apple')}</span>
               </Button>
               
               <Button 
@@ -150,7 +160,7 @@ export function LoginForm({
                 ) : (
                   <IconBrandGoogle className="h-5 w-5" />
                 )}
-                <span className="ml-2">使用 Google 登录</span>
+                <span className="ml-2">{t('Sign in with Google')}</span>
               </Button>
             </div>
 
@@ -161,7 +171,7 @@ export function LoginForm({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  或使用邮箱登录
+                  {t('Or sign in with email')}
                 </span>
               </div>
             </div>
@@ -170,7 +180,7 @@ export function LoginForm({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  邮箱地址
+                  {t('Email address')}
                 </Label>
                 <Input
                   id="email"
@@ -187,19 +197,19 @@ export function LoginForm({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium">
-                    密码
+                    {t('Password')}
                   </Label>
                   <a
                     href="#"
                     className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
                   >
-                    忘记密码？
+                    {t('Forgot password?')}
                   </a>
                 </div>
                 <Input 
                   id="password" 
                   type="password" 
-                  placeholder="请输入密码"
+                  placeholder={t('Password')}
                   value={formData.password}
                   onChange={handleInputChange}
                   required
@@ -216,22 +226,22 @@ export function LoginForm({
                 {isLoading ? (
                   <>
                     <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                    加载中...
+                    {t('Loading...')}
                   </>
                 ) : (
-                  "登录"
+                  t('Sign in')
                 )}
               </Button>
             </div>
 
             {/* 注册链接 */}
             <div className="text-center text-sm text-muted-foreground">
-              还没有账户？{" "}
+              {t("Don't have an account?")}{" "}
               <a 
                 href="#" 
                 className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium transition-colors"
               >
-                立即注册
+                {t('Sign up now')}
               </a>
             </div>
           </form>
@@ -240,19 +250,19 @@ export function LoginForm({
       
       {/* 服务条款和隐私政策 */}
       <div className="text-center text-xs text-muted-foreground">
-        点击继续即表示您同意我们的{" "}
+        {t('By continuing, you agree to our')}{" "}
         <a 
           href="#" 
           className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
         >
-          服务条款
+          {t('Terms of Service')}
         </a>{" "}
-        和{" "}
+        {t('and')}{" "}
         <a 
           href="#" 
           className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
         >
-          隐私政策
+          {t('Privacy Policy')}
         </a>
         。
       </div>
