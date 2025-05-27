@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": ["frontend"],
   "scripts": {
-    "dev": "concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
+    "dev": "bunx concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
     "dev:backend": "cargo watch -x 'run --bin backend'",
     "dev:frontend": "cd frontend && bun run dev",
     "build": "bun run build:backend && bun run build:frontend",
