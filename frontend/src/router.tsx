@@ -1,40 +1,42 @@
-import { createBrowserRouter, Navigate } from "react-router-dom"
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom"
 import { LoginPage } from "./pages/LoginPage"
 import { DashboardPage } from "./pages/DashboardPage"
 import { ErrorBoundary } from "./components/ErrorBoundary"
 import { ProtectedRoute } from "./components/ProtectedRoute"
-import { AuthProvider } from "./contexts/AuthContext"
 
-// Root layout component that provides auth context
-function RootLayout({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>
+// Root layout component that provides auth context for all routes
+function RootLayout() {
+  return (
+      <Outlet />
+  )
 }
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <RootLayout><Navigate to="/dashboard" replace /></RootLayout>,
+    element: <RootLayout />,
     errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/login",
-    element: <RootLayout><LoginPage /></RootLayout>,
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <RootLayout>
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      </RootLayout>
-    ),
-    errorElement: <ErrorBoundary />,
-  },
-  {
-    path: "*",
-    element: <RootLayout><Navigate to="/dashboard" replace /></RootLayout>,
-    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "*",
+        element: <Navigate to="/dashboard" replace />,
+      },
+    ],
   },
 ]) 

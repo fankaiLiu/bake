@@ -7,12 +7,18 @@ export function ErrorBoundary() {
 
   let errorMessage: string
   let errorStatus: string | number = "Error"
+  let isContextError = false
 
   if (isRouteErrorResponse(error)) {
     errorMessage = error.data?.message || error.statusText
     errorStatus = error.status
   } else if (error instanceof Error) {
     errorMessage = error.message
+    // 检查是否为 Context 相关错误
+    if (error.message.includes('useContext') || error.message.includes('AuthProvider')) {
+      isContextError = true
+      errorMessage = "应用程序初始化失败，请刷新页面重试"
+    }
   } else if (typeof error === "string") {
     errorMessage = error
   } else {
@@ -44,9 +50,15 @@ export function ErrorBoundary() {
             </Button>
             <Button 
               className="flex-1"
-              onClick={() => window.location.href = "/dashboard"}
+              onClick={() => {
+                if (isContextError) {
+                  window.location.reload()
+                } else {
+                  window.location.href = "/dashboard"
+                }
+              }}
             >
-              Go Home
+              {isContextError ? "Refresh Page" : "Go Home"}
             </Button>
           </div>
         </CardContent>

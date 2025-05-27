@@ -201,12 +201,7 @@ export function LoginForm({
                     href="#"
                     className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
                   >
-                    <a
-                    href="#"
-                    className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
-                  >
                     {t("auth.login.forgot_password")}
-                  </a>
                   </a>
                 </div>
                 <Input 

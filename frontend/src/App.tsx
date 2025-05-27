@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
 import { useEffect, useState } from "react"
 import { initI18n } from "./lib/i18n"
+import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary"
 
 const App = () => {
   const [i18nReady, setI18nReady] = useState(false)
@@ -24,7 +25,11 @@ const App = () => {
     )
   }
 
-  return <RouterProvider router={router} />
+  return (
+    <GlobalErrorBoundary>
+      <RouterProvider router={router} />
+    </GlobalErrorBoundary>
+  )
 }
 
 export default App
