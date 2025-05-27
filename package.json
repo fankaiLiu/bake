@@ -4,15 +4,15 @@
   "workspaces": ["frontend"],
   "scripts": {
     "dev": "bunx concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
-    "dev:backend": "cargo watch -x 'run --bin backend'",
+    "dev:backend": "cargo install cargo-watch --quiet 2>/dev/null || true && cargo watch -x 'run --bin backend'",
     "dev:frontend": "cd frontend && bun run dev",
     "build": "bun run build:backend && bun run build:frontend",
     "build:backend": "cargo build --release",
     "build:frontend": "cd frontend && bun run build",
-    "test": "cargo test && cd frontend && bun test"
+    "test": "cargo test && cd frontend && bun test",
+    "setup": "cargo install cargo-watch"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0",
-    "cargo-watch": "^8.4.0"
+    "concurrently": "^8.2.0"
   }
 }
