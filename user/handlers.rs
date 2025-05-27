@@ -1,12 +1,12 @@
-use serde::Serialize;
-use serde::Deserialize;
 use uuid::Uuid;
+use serde::Deserialize;
+use serde::Serialize;
 use salvo::prelude::*;
-use crate::models::GetUserByIdSql1Response;
-use crate::models::CreateUserSql1RequestOptional;
 use crate::models::CreateUserSql1Response;
-use crate::models::CreateUserSql1Request;
 use crate::utils;
+use crate::models::CreateUserSql1Request;
+use crate::models::CreateUserSql1RequestOptional;
+use crate::models::GetUserByIdSql1Response;
 
 #[handler]
 pub async fn get_user_by_id_handler(

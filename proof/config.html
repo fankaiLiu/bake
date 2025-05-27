@@ -2,7 +2,7 @@
 <html class="h-full">
 <head>
   <title>配置</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -21,99 +21,109 @@
     }
   </script>
 </head>
-<body class="h-full bg-white dark:bg-apple-dark text-apple-dark dark:text-white">
-  <div class="max-w-3xl mx-auto px-4 py-8">
-    <!-- Navigation -->
-    <nav class="mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
-      <a href="index.html" class="text-apple-blue hover:opacity-80 transition-opacity">返回主页</a>
-    </nav>
+<body class="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
+  <!-- Navigation -->
+  <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between py-4">
+        <div class="flex items-center gap-6">
+          <a href="index.html" class="text-blue-600 hover:text-blue-500 transition-colors font-medium">返回主页</a>
+          <a href="usage.html" class="text-purple-600 hover:text-purple-500 transition-colors font-medium">使用说明</a>
+          <a href="https://github.com/fankaiLiu/bake/issues" target="_blank" class="text-yellow-600 hover:text-yellow-500 transition-colors font-medium">建议反馈</a>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">配置管理</h1>
+      </div>
+    </div>
+  </nav>
 
-    <h1 class="text-3xl font-semibold mb-8">配置</h1>
-
+  <div class="max-w-5xl mx-auto px-4 py-8">
     <!-- Current Directory Display -->
-    <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm">
-      当前工作目录: <span id="cwd-path" class="font-mono">加载中...</span>
+    <div class="mb-8 p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+      <div class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">当前工作目录</div>
+      <div id="cwd-path" class="font-mono text-gray-800 dark:text-gray-200 bg-gray-100/80 dark:bg-gray-700/80 p-3 rounded-lg break-all">加载中...</div>
     </div>
 
     <!-- Path Mode Toggle -->
-    <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl flex justify-between items-center">
-      <div class="flex items-center">
-        <span>当前路径显示模式:</span>
-        <span id="current-path-mode" class="ml-2 px-3 py-1 bg-apple-blue text-white text-sm rounded-full">相对路径</span>
+    <div class="mb-8 p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <span class="text-lg font-semibold text-gray-700 dark:text-gray-300">路径显示模式:</span>
+          <span id="current-path-mode" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-sm rounded-xl font-medium shadow-lg">相对路径</span>
+        </div>
+        <button onclick="togglePathDisplayMode()" id="path-mode-toggle-btn" 
+                class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-500 hover:to-emerald-600 transform hover:scale-105 transition-all duration-200 shadow-lg">
+          切换为绝对路径
+        </button>
       </div>
-      <button onclick="togglePathDisplayMode()" id="path-mode-toggle-btn" 
-              class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
-        切换为绝对路径
-      </button>
     </div>
 
     <!-- SQL Path Section -->
-    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">SQL 文件路径</h2>
+    <div class="mb-8 p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+      <h2 class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent mb-6 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">SQL 文件路径</h2>
       <div class="space-y-4">
         <div class="flex items-center gap-4">
           <input type="text" id="sql-path" 
-                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 class="flex-1 px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-600/50 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-gray-100 shadow-inner focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-all placeholder-gray-400 dark:placeholder-gray-500"
                  placeholder="请手动粘贴 SQL 文件路径或选择目录...">
           <button onclick="showSqlDirectorySelector('.')" 
-                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+                  class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-500 hover:to-emerald-600 transform hover:scale-105 transition-all duration-200 shadow-lg">
             选择目录
           </button>
         </div>
-        <span id="sql-path-tip" class="text-sm text-apple-blue"></span>
+        <span id="sql-path-tip" class="text-sm text-emerald-600 dark:text-teal-400 font-medium"></span>
       </div>
-      <div id="sql-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+      <div id="sql-dir-selector" class="hidden mt-4 p-4 bg-white/90 dark:bg-gray-700/90 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm"></div>
     </div>
 
     <!-- Output Path Section -->
-    <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">输出路径</h2>
+    <div class="mb-8 p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+      <h2 class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent mb-6 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">输出路径配置</h2>
       
       <!-- Rust Output Path -->
-      <div class="mb-6">
-        <label class="block text-sm font-medium mb-2">Rust 代码输出路径:</label>
+      <div class="mb-8 p-5 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl border border-gray-200/30 dark:border-gray-600/30">
+        <label class="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Rust 代码输出路径</label>
         <div class="flex items-center gap-4">
           <input type="text" id="rust-output-path" 
-                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 class="flex-1 px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-600/50 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-gray-100 shadow-inner focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-all placeholder-gray-400 dark:placeholder-gray-500"
                  placeholder="请手动粘贴或点击右侧按钮选择目录...">
           <button onclick="showRustDirectorySelector('.')" 
-                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+                  class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-red-500 hover:to-pink-500 transform hover:scale-105 transition-all duration-200 shadow-lg">
             选择目录
           </button>
         </div>
-        <span id="rust-output-path-tip" class="text-sm text-apple-blue"></span>
-        <div id="rust-output-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+        <span id="rust-output-path-tip" class="text-sm text-orange-600 dark:text-orange-400 font-medium"></span>
+        <div id="rust-output-dir-selector" class="hidden mt-4 p-4 bg-white/90 dark:bg-gray-700/90 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm"></div>
       </div>
 
       <!-- Frontend Output Path -->
-      <div>
-        <label class="block text-sm font-medium mb-2">前端代码输出路径:</label>
+      <div class="p-5 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl border border-gray-200/30 dark:border-gray-600/30">
+        <label class="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">前端代码输出路径</label>
         <div class="flex items-center gap-4">
           <input type="text" id="frontend-output-path" 
-                 class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                 class="flex-1 px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-600/50 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-gray-100 shadow-inner focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-all placeholder-gray-400 dark:placeholder-gray-500"
                  placeholder="请手动粘贴或点击右侧按钮选择目录...">
           <button onclick="showFrontendDirectorySelector('.')" 
-                  class="px-4 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+                  class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg">
             选择目录
           </button>
         </div>
-        <span id="frontend-output-path-tip" class="text-sm text-apple-blue"></span>
-        <div id="frontend-output-dir-selector" class="hidden mt-2 p-4 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"></div>
+        <span id="frontend-output-path-tip" class="text-sm text-purple-600 dark:text-purple-400 font-medium"></span>
+        <div id="frontend-output-dir-selector" class="hidden mt-4 p-4 bg-white/90 dark:bg-gray-700/90 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-600/50 backdrop-blur-sm"></div>
       </div>
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-6 p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
       <button onclick="saveConfig()" 
-              class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
+              class="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-500 hover:to-emerald-600 transform hover:scale-105 transition-all duration-200 shadow-lg">
         保存配置
       </button>
       <button onclick="resetConfig()" 
-              class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity">
+              class="px-8 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold rounded-xl hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
         重置配置
       </button>
-      <span id="save-reset-tip" class="text-sm text-apple-blue"></span>
-      <span id="server-diff-tip" class="hidden px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full text-sm font-medium">
+      <span id="save-reset-tip" class="text-sm text-emerald-600 dark:text-teal-400 font-medium"></span>
+      <span id="server-diff-tip" class="hidden px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 text-blue-700 dark:text-blue-200 rounded-xl text-sm font-medium shadow-md">
         与配置文件不同步，请保存
       </span>
     </div>

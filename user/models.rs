@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use salvo::macros::Extractible;
-use validator::ValidationError;
 use validator::Validate;
+use salvo::macros::Extractible;
+use serde::{Deserialize, Serialize};
+use validator::ValidationError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUserSql1Response {
@@ -28,15 +28,6 @@ pub struct GetUserByIdSql1Response {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateUserSql1Request {
-    pub username: String,
-    pub password: String,
-    pub role: String,
-    pub name: String,
-    pub contact: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Validate,Extractible)]
 #[salvo(extract(default_source(from = "body")))]
 pub struct CreateUserSql1RequestOptional {
@@ -52,6 +43,15 @@ pub struct CreateUserSql1RequestOptional {
     #[validate(length(min = 2, max = 50, message = "姓名长度必须在2-50个字符之间"))]
     pub name: Option<String>,
     #[validate(length(max = 50, message = "联系方式最长50个字符"))]
+    pub contact: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateUserSql1Request {
+    pub username: String,
+    pub password: String,
+    pub role: String,
+    pub name: String,
     pub contact: Option<String>,
 }
 impl TryFrom<CreateUserSql1RequestOptional> for CreateUserSql1Request {

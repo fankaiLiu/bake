@@ -10,64 +10,54 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            apple: {
-              blue: '#007AFF',
-              dark: '#1D1D1F',
-              gray: '#86868B',
-              light: '#F5F5F7'
-            }
-          }
-        }
-      }
-    }
-  </script>
 </head>
-<body class="h-full bg-apple-light dark:bg-apple-dark text-apple-dark dark:text-white">
+<body class="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
   <!-- Navigation -->
-  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+  <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
     <div class="max-w-7xl mx-auto px-4">
-      <a href="config.html" class="inline-block py-4 text-apple-blue hover:opacity-80 transition-opacity">转到配置页面</a>
+      <div class="flex items-center justify-between py-4">
+        <div class="flex items-center gap-6">
+          <a href="usage.html" class="text-blue-600 hover:text-blue-500 transition-colors font-medium">使用说明</a>
+          <a href="https://github.com/fankaiLiu/bake/issues" target="_blank" class="text-purple-600 hover:text-purple-500 transition-colors font-medium">建议反馈</a>
+          <a href="https://github.com/fankaiLiu/bake" target="_blank" class="text-yellow-600 hover:text-yellow-500 transition-colors font-medium">⭐ 点星支持</a>
+        </div>
+        <a href="config.html" class="text-emerald-600 hover:text-emerald-500 transition-colors font-medium">转到配置页面</a>
+      </div>
     </div>
   </nav>
 
   <!-- Main Content -->
   <div class="flex h-[calc(100vh-57px)]">
     <!-- Left Panel -->
-    <div class="w-[420px] min-w-[340px] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm p-8">
-      <h1 class="text-3xl font-semibold text-apple-blue mb-4">SQL Code Generator</h1>
+    <div class="w-[420px] min-w-[340px] bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border-r border-gray-200/50 dark:border-gray-700/50 shadow-lg p-8">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent mb-4">SQL Code Generator</h1>
       
       <!-- Current Working Directory Display -->
-      <div id="cwdDisplay" class="mb-6 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">当前工作目录:</div>
-        <div id="cwdPath" class="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">加载中...</div>
+      <div id="cwdDisplay" class="mb-6 p-4 bg-gray-100/80 dark:bg-gray-700/80 rounded-xl border border-gray-200/50 dark:border-gray-600/50">
+        <div class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">当前工作目录:</div>
+        <div id="cwdPath" class="text-sm font-mono text-gray-800 dark:text-gray-200 break-all bg-white/50 dark:bg-gray-800/50 p-2 rounded-lg">加载中...</div>
       </div>
 
       <!-- Status Display -->
-      <div id="statusDisplay" class="mb-6 p-3 rounded-lg hidden">
-        <div class="text-sm font-medium mb-1">状态:</div>
-        <div id="statusText" class="text-sm"></div>
-        <div id="statusTime" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+      <div id="statusDisplay" class="mb-6 p-4 rounded-xl hidden border">
+        <div class="text-sm font-semibold mb-2">状态:</div>
+        <div id="statusText" class="text-sm font-medium"></div>
+        <div id="statusTime" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></div>
       </div>
       
       <!-- Requirements Input Section -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <h2 class="text-xl font-semibold mb-4">需求输入</h2>
+      <div class="bg-white/70 dark:bg-gray-800/70 rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-6 shadow-lg backdrop-blur-sm">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">需求输入</h2>
         <textarea id="requirements" 
-                  class="w-full h-64 p-4 mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-y"
+                  class="w-full h-64 p-4 mb-4 rounded-xl bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 shadow-inner focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-all resize-y placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="请输入您的SQL需求..."></textarea>
         <div class="flex gap-3">
           <button id="generateBtn" onclick="generateCode()" 
-                  class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-500 hover:to-emerald-600 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
             生成代码
           </button>
           <button id="clearBtn" onclick="clearAll()" 
-                  class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                  class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold rounded-xl hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
             清空
           </button>
         </div>
@@ -76,44 +66,45 @@
 
     <!-- Right Panel -->
     <div class="flex-1 p-4 overflow-y-auto">
-      <div id="resultSection" class="hidden bg-gray-50 dark:bg-gray-900 rounded-xl shadow p-6">
-        <div class="flex justify-between items-center mb-4">
+      <div id="resultSection" class="hidden bg-white/60 dark:bg-gray-900/60 backdrop-blur-lg rounded-xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
+        <div class="flex justify-between items-center mb-6">
           <div class="flex items-center gap-6">
-            <h2 class="text-xl font-semibold">生成结果</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">生成结果</h2>
             <!-- Summary Information -->
-            <div id="summaryInfo" class="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <div id="summaryInfo" class="flex gap-4 text-sm text-gray-600 dark:text-gray-400 font-medium">
               <span id="fileCount">文件: 0</span>
               <span id="totalChars">总字数: 0</span>
-              <span id="generationSpeed" class="hidden">速度: 0 字符/秒</span>
+              <span id="generationSpeed" class="hidden">速度: 0 字/每秒</span>
             </div>
           </div>
-          <button id="copyBtn" onclick="copyCurrentTab()" 
-                  class="px-4 py-2 bg-green-500 text-white rounded-lg hover:opacity-90 transition-opacity">
-            复制当前Tab
-          </button>
+          <div class="flex gap-3">
+            <button onclick="writeFiles()" 
+                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-200 shadow-lg">
+              写入文件
+            </button>
+            <button id="copyBtn" onclick="copyCurrentTab()" 
+                    class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-red-500 transform hover:scale-105 transition-all duration-200 shadow-lg">
+              复制当前Tab
+            </button>
+          </div>
         </div>
         
         <!-- Tabs -->
-        <div id="tabs" class="flex gap-1 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"></div>
+        <div id="tabs" class="flex gap-2 mb-6 border-b border-gray-200/50 dark:border-gray-700/50 pb-3"></div>
         
         <!-- Tab Contents -->
         <div id="tabContents"></div>
-        
-        <button onclick="writeFiles()" 
-                class="mt-6 px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity">
-          写入文件
-        </button>
       </div>
     </div>
   </div>
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl flex flex-col items-center">
-      <div class="w-12 h-12 border-4 border-gray-200 dark:border-gray-600 border-t-apple-blue rounded-full animate-spin mb-4"></div>
-      <div class="text-lg mb-4 text-gray-700 dark:text-gray-200">正在生成代码，请稍候...</div>
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center">
+    <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg p-8 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-200/50 dark:border-gray-700/50">
+      <div class="w-12 h-12 border-4 border-gray-200 dark:border-gray-600 border-t-emerald-600 rounded-full animate-spin mb-4"></div>
+      <div class="text-lg mb-4 text-gray-800 dark:text-gray-200 font-medium">正在生成代码，请稍候...</div>
       <button onclick="hideLoading()" 
-              class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:opacity-90 transition-opacity">
+              class="px-6 py-2 bg-gradient-to-r from-gray-400 to-gray-500 text-white font-medium rounded-xl hover:from-gray-500 hover:to-gray-600 transform hover:scale-105 transition-all duration-200 shadow-md">
         手动关闭
       </button>
     </div>
@@ -128,7 +119,8 @@
     const STORAGE_KEYS = {
       REQUIREMENTS: 'sql_generator_requirements',
       GENERATED_CODE: 'sql_generator_generated_code',
-      STATUS: 'sql_generator_status'
+      STATUS: 'sql_generator_status',
+      GENERATION_SPEED: 'sql_generator_generation_speed'
     };
 
     // Status types
@@ -166,6 +158,12 @@
       if (currentGeneratedCode) {
         localStorage.setItem(STORAGE_KEYS.GENERATED_CODE, JSON.stringify(currentGeneratedCode));
       }
+      
+      // 保存生成速度
+      const speedElement = document.getElementById('generationSpeed');
+      if (!speedElement.classList.contains('hidden')) {
+        localStorage.setItem(STORAGE_KEYS.GENERATION_SPEED, speedElement.textContent);
+      }
     }
 
     // 从localStorage恢复状态
@@ -182,6 +180,13 @@
         try {
           currentGeneratedCode = JSON.parse(savedGeneratedCode);
           displayGeneratedCode(currentGeneratedCode);
+          
+          // 恢复生成速度
+          const savedSpeed = localStorage.getItem(STORAGE_KEYS.GENERATION_SPEED);
+          if (savedSpeed) {
+            document.getElementById('generationSpeed').textContent = savedSpeed;
+            document.getElementById('generationSpeed').classList.remove('hidden');
+          }
         } catch (error) {
           console.error('Error parsing saved generated code:', error);
         }
@@ -210,24 +215,24 @@
       
       switch (type) {
         case STATUS_TYPES.GENERATE_SUCCESS:
-          statusClass = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+          statusClass = 'bg-emerald-100/80 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 border-emerald-200/50 dark:border-emerald-700/50';
           statusMessage = '生成成功';
           break;
         case STATUS_TYPES.GENERATE_FAILED:
-          statusClass = 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+          statusClass = 'bg-red-100/80 dark:bg-red-900/80 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/50';
           statusMessage = '生成失败';
           break;
         case STATUS_TYPES.WRITE_SUCCESS:
-          statusClass = 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+          statusClass = 'bg-blue-100/80 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border-blue-200/50 dark:border-blue-700/50';
           statusMessage = '写入成功';
           break;
         case STATUS_TYPES.WRITE_FAILED:
-          statusClass = 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+          statusClass = 'bg-red-100/80 dark:bg-red-900/80 text-red-800 dark:text-red-200 border-red-200/50 dark:border-red-700/50';
           statusMessage = '写入失败';
           break;
       }
       
-      statusDisplay.className = `mb-6 p-3 rounded-lg ${statusClass}`;
+      statusDisplay.className = `mb-6 p-4 rounded-xl border ${statusClass}`;
       statusText.textContent = `${statusMessage}: ${message}`;
       
       const timeToShow = timestamp || new Date().toLocaleString();
@@ -287,10 +292,14 @@
         // 清空状态显示
         document.getElementById('statusDisplay').classList.add('hidden');
         
+        // 隐藏生成速度
+        document.getElementById('generationSpeed').classList.add('hidden');
+        
         // 清空localStorage
         localStorage.removeItem(STORAGE_KEYS.REQUIREMENTS);
         localStorage.removeItem(STORAGE_KEYS.GENERATED_CODE);
         localStorage.removeItem(STORAGE_KEYS.STATUS);
+        localStorage.removeItem(STORAGE_KEYS.GENERATION_SPEED);
         
         Swal.fire({
           icon: 'success',
@@ -439,12 +448,15 @@
         const generationEndTime = Date.now();
         const generationTimeSeconds = (generationEndTime - generationStartTime) / 1000;
         const speed = Math.round(totalChars / generationTimeSeconds);
-        document.getElementById('generationSpeed').textContent = `速度: ${speed.toLocaleString()} 字符/秒`;
+        document.getElementById('generationSpeed').textContent = `速度: ${speed.toLocaleString()} 字/每秒`;
         document.getElementById('generationSpeed').classList.remove('hidden');
+        
+        // 保存生成速度到localStorage
+        localStorage.setItem(STORAGE_KEYS.GENERATION_SPEED, document.getElementById('generationSpeed').textContent);
       }
 
-      const inactiveTabBaseClasses = 'px-4 py-2 cursor-pointer rounded-t-lg';
-      const inactiveTabColorClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+      const inactiveTabBaseClasses = 'px-6 py-3 cursor-pointer rounded-xl font-medium transition-all duration-200';
+      const inactiveTabColorClasses = 'bg-gray-100/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-gray-600/80 border border-gray-200/50 dark:border-gray-600/50';
       const contentHiddenClass = 'tab-content hidden';
 
       // 添加代码文件tabs
@@ -462,15 +474,15 @@
         const languageClass = getLanguageClass(filePath);
         
         const wrapperDiv = document.createElement('div');
-        wrapperDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+        wrapperDiv.className = 'bg-white/80 dark:bg-gray-800/80 rounded-xl p-6 mb-4 shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm';
         
         const titleElement = document.createElement('h3');
-        titleElement.className = 'text-lg font-medium text-apple-blue mb-2';
+        titleElement.className = 'text-lg font-semibold text-emerald-600 dark:text-teal-400 mb-3';
         titleElement.textContent = filePath;
         
         const preElement = document.createElement('pre');
-        preElement.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
-        
+        preElement.className = 'bg-gray-50/90 dark:bg-gray-900/90 text-gray-800 dark:text-gray-200 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-gray-200/50 dark:border-gray-700/50';
+
         const codeElement = document.createElement('code');
         codeElement.className = languageClass;
         codeElement.textContent = content;
@@ -499,14 +511,14 @@
         
         data.table_migrations.forEach((migration, migrationIndex) => {
           const originalDiv = document.createElement('div');
-          originalDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+          originalDiv.className = 'bg-white/80 dark:bg-gray-800/80 rounded-xl p-6 mb-4 shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm';
           
           const originalTitle = document.createElement('h4');
-          originalTitle.className = 'text-lg font-medium mb-2';
+          originalTitle.className = 'text-lg font-semibold text-emerald-600 dark:text-teal-400 mb-3';
           originalTitle.textContent = `迁移 #${migrationIndex + 1} - 原始SQL`;
           
           const originalPre = document.createElement('pre');
-          originalPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
+          originalPre.className = 'bg-gray-50/90 dark:bg-gray-900/90 text-gray-800 dark:text-gray-200 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-gray-200/50 dark:border-gray-700/50';
           const originalCode = document.createElement('code');
           originalCode.className = 'language-sql';
           originalCode.textContent = migration.original_sql;
@@ -532,14 +544,14 @@
         
         data.table_migrations.forEach((migration, migrationIndex) => {
           const reversedDiv = document.createElement('div');
-          reversedDiv.className = 'bg-gray-100 dark:bg-gray-800 rounded-xl p-4 mb-4 shadow';
+          reversedDiv.className = 'bg-white/80 dark:bg-gray-800/80 rounded-xl p-6 mb-4 shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm';
           
           const reversedTitle = document.createElement('h4');
-          reversedTitle.className = 'text-lg font-medium mb-2';
+          reversedTitle.className = 'text-lg font-semibold text-emerald-600 dark:text-teal-400 mb-3';
           reversedTitle.textContent = `迁移 #${migrationIndex + 1} - 反向SQL`;
           
           const reversedPre = document.createElement('pre');
-          reversedPre.className = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-4 rounded-xl overflow-x-auto max-h-[400px] overflow-y-auto';
+          reversedPre.className = 'bg-gray-50/90 dark:bg-gray-900/90 text-gray-800 dark:text-gray-200 p-4 rounded-xl overflow-x-auto max-h-[500px] overflow-y-auto border border-gray-200/50 dark:border-gray-700/50';
           const reversedCode = document.createElement('code');
           reversedCode.className = 'language-sql';
           reversedCode.textContent = migration.reversed_sql;
@@ -579,9 +591,9 @@
       
       currentActiveTabIndex = index;
       
-      const activeTabClasses = 'px-4 py-2 cursor-pointer rounded-t-lg bg-apple-blue text-white';
-      const inactiveTabBaseClasses = 'px-4 py-2 cursor-pointer rounded-t-lg';
-      const inactiveTabColorClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
+      const activeTabClasses = 'px-6 py-3 cursor-pointer rounded-xl font-medium transition-all duration-200 bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg transform scale-105';
+      const inactiveTabBaseClasses = 'px-6 py-3 cursor-pointer rounded-xl font-medium transition-all duration-200';
+      const inactiveTabColorClasses = 'bg-gray-100/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-gray-600/80 border border-gray-200/50 dark:border-gray-600/50';
 
       tabs.forEach((tab, i) => {
         if (i === index) {
