@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,13 +33,13 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const { t } = useTranslation();
+  const { login, isLoading } = useAuth();
   
   // 状态管理
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   /**
@@ -56,28 +57,21 @@ export function LoginForm({
    */
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
 
     try {
-      // 模拟登录逻辑
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       if (!formData.email || !formData.password) {
-        throw new Error(t('Email and password cannot be empty'))
+        throw new Error('邮箱和密码不能为空')
       }
       
       if (formData.password.length < 6) {
-        throw new Error(t('Password must be at least 6 characters long'))
+        throw new Error('密码至少需要6位字符')
       }
 
-      // 登录成功，保持在登录页面或者跳转到其他页面
-      console.log(t('Login successful') + ':', formData.email)
-      setError(t('Login demo completed'))
+      await login(formData.email, formData.password)
+      // 登录成功后会自动跳转到 dashboard
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Login failed, please check your email and password'))
-    } finally {
-      setIsLoading(false)
+      setError(err instanceof Error ? err.message : '登录失败，请检查邮箱和密码')
     }
   }
 
@@ -86,7 +80,6 @@ export function LoginForm({
    * TODO: 集成真实的第三方认证 API
    */
   const handleSocialLogin = async (provider: 'apple' | 'google') => {
-    setIsLoading(true)
     setError(null)
 
     try {
@@ -97,11 +90,9 @@ export function LoginForm({
       console.log(`Initiating ${provider} login...`)
       
       // 暂时显示提示信息
-      setError(t(`${provider} login is under development`))
+      setError(`${provider} 登录功能正在开发中`)
     } catch (err) {
-      setError(t(`${provider} login failed`))
-    } finally {
-      setIsLoading(false)
+      setError(`${provider} 登录失败`)
     }
   }
 
