@@ -1,32 +1,14 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom"
-import { LoginPage } from "./pages/LoginPage"
-import { ErrorBoundary } from "./components/ErrorBoundary"
+import { createRouter } from '@tanstack/react-router'
 
-// Root layout component that provides auth context for all routes
-function RootLayout() {
-  return (
-      <Outlet />
-  )
+// Import the generated route tree
+import { routeTree } from './routeTree.gen'
+
+// Create a new router instance
+export const router = createRouter({ routeTree })
+
+// Register the router instance for type safety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
 }
-
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RootLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/login" replace />,
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
-      },
-      {
-        path: "*",
-        element: <Navigate to="/login" replace />,
-      },
-    ],
-  },
-]) 

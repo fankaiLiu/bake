@@ -120,6 +120,114 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@theme {
+  --color-semi-white: var(--semi-color-white);
+  --color-semi-black: var(--semi-color-black);
+  --color-semi-primary: var(--semi-color-primary);
+  --color-semi-primary-hover: var(--semi-color-primary-hover);
+  --color-semi-primary-active: var(--semi-color-primary-active);
+  --color-semi-primary-disabled: var(--semi-color-primary-disabled);
+  --color-semi-primary-light-default: var(--semi-color-primary-light-default);
+  --color-semi-primary-light-hover: var(--semi-color-primary-light-hover);
+  --color-semi-primary-light-active: var(--semi-color-primary-light-active);
+  --color-semi-secondary: var(--semi-color-secondary);
+  --color-semi-secondary-hover: var(--semi-color-secondary-hover);
+  --color-semi-secondary-active: var(--semi-color-secondary-active);
+  --color-semi-secondary-disabled: var(--semi-color-secondary-disabled);
+  --color-semi-secondary-light-default: var(--semi-color-secondary-light-default);
+  --color-semi-secondary-light-hover: var(--semi-color-secondary-light-hover);
+  --color-semi-secondary-light-active: var(--semi-color-secondary-light-active);
+  --color-semi-tertiary: var(--semi-color-tertiary);
+  --color-semi-tertiary-hover: var(--semi-color-tertiary-hover);
+  --color-semi-tertiary-active: var(--semi-color-tertiary-active);
+  --color-semi-tertiary-light-default: var(--semi-color-tertiary-light-default);
+  --color-semi-tertiary-light-hover: var(--semi-color-tertiary-light-hover);
+  --color-semi-tertiary-light-active: var(--semi-color-tertiary-light-active);
+  --color-semi-default: var(--semi-color-default);
+  --color-semi-default-hover: var(--semi-color-default-hover);
+  --color-semi-default-active: var(--semi-color-default-active);
+  --color-semi-info: var(--semi-color-info);
+  --color-semi-info-hover: var(--semi-color-info-hover);
+  --color-semi-info-active: var(--semi-color-info-active);
+  --color-semi-info-disabled: var(--semi-color-info-disabled);
+  --color-semi-info-light-default: var(--semi-color-info-light-default);
+  --color-semi-info-light-hover: var(--semi-color-info-light-hover);
+  --color-semi-info-light-active: var(--semi-color-info-light-active);
+  --color-semi-success: var(--semi-color-success);
+  --color-semi-success-hover: var(--semi-color-success-hover);
+  --color-semi-success-active: var(--semi-color-success-active);
+  --color-semi-success-disabled: var(--semi-color-success-disabled);
+  --color-semi-success-light-default: var(--semi-color-success-light-default);
+  --color-semi-success-light-hover: var(--semi-color-success-light-hover);
+  --color-semi-success-light-active: var(--semi-color-success-light-active);
+  --color-semi-danger: var(--semi-color-danger);
+  --color-semi-danger-hover: var(--semi-color-danger-hover);
+  --color-semi-danger-active: var(--semi-color-danger-active);
+  --color-semi-danger-light-default: var(--semi-color-danger-light-default);
+  --color-semi-danger-light-hover: var(--semi-color-danger-light-hover);
+  --color-semi-danger-light-active: var(--semi-color-danger-light-active);
+  --color-semi-warning: var(--semi-color-warning);
+  --color-semi-warning-hover: var(--semi-color-warning-hover);
+  --color-semi-warning-active: var(--semi-color-warning-active);
+  --color-semi-warning-light-default: var(--semi-color-warning-light-default);
+  --color-semi-warning-light-hover: var(--semi-color-warning-light-hover);
+  --color-semi-warning-light-active: var(--semi-color-warning-light-active);
+  --color-semi-focus-border: var(--semi-color-focus-border);
+  --color-semi-disabled-text: var(--semi-color-disabled-text);
+  --color-semi-disabled-border: var(--semi-color-disabled-border);
+  --color-semi-disabled-bg: var(--semi-color-disabled-bg);
+  --color-semi-disabled-fill: var(--semi-color-disabled-fill);
+  --color-semi-shadow: var(--semi-color-shadow);
+  --color-semi-link: var(--semi-color-link);
+  --color-semi-link-hover: var(--semi-color-link-hover);
+  --color-semi-link-active: var(--semi-color-link-active);
+  --color-semi-link-visited: var(--semi-color-link-visited);
+  --color-semi-border: var(--semi-color-border);
+  --color-semi-nav-bg: var(--semi-color-nav-bg);
+  --color-semi-overlay-bg: var(--semi-color-overlay-bg);
+  --color-semi-fill-0: var(--semi-color-fill-0);
+  --color-semi-fill-1: var(--semi-color-fill-1);
+  --color-semi-fill-2: var(--semi-color-fill-2);
+  --color-semi-bg-0: var(--semi-color-bg-0);
+  --color-semi-bg-1: var(--semi-color-bg-1);
+  --color-semi-bg-2: var(--semi-color-bg-2);
+  --color-semi-bg-3: var(--semi-color-bg-3);
+  --color-semi-bg-4: var(--semi-color-bg-4);
+  --color-semi-text-0: var(--semi-color-text-0);
+  --color-semi-text-1: var(--semi-color-text-1);
+  --color-semi-text-2: var(--semi-color-text-2);
+  --color-semi-text-3: var(--semi-color-text-3);
+  --color-semi-highlight-bg: var(--semi-color-highlight-bg);
+  --color-semi-highlight: var(--semi-color-highlight);
+  --color-semi-data-0: var(--semi-color-data-0);
+  --color-semi-data-1: var(--semi-color-data-1);
+  --color-semi-data-2: var(--semi-color-data-2);
+  --color-semi-data-3: var(--semi-color-data-3);
+  --color-semi-data-4: var(--semi-color-data-4);
+  --color-semi-data-5: var(--semi-color-data-5);
+  --color-semi-data-6: var(--semi-color-data-6);
+  --color-semi-data-7: var(--semi-color-data-7);
+  --color-semi-data-8: var(--semi-color-data-8);
+  --color-semi-data-9: var(--semi-color-data-9);
+  --color-semi-data-10: var(--semi-color-data-10);
+  --color-semi-data-11: var(--semi-color-data-11);
+  --color-semi-data-12: var(--semi-color-data-12);
+  --color-semi-data-13: var(--semi-color-data-13);
+  --color-semi-data-14: var(--semi-color-data-14);
+  --color-semi-data-15: var(--semi-color-data-15);
+  --color-semi-data-16: var(--semi-color-data-16);
+  --color-semi-data-17: var(--semi-color-data-17);
+  --color-semi-data-18: var(--semi-color-data-18);
+  --color-semi-data-19: var(--semi-color-data-19);
+
+  --radius-semi-extra-small: var(--semi-border-radius-extra-small);
+  --radius-semi-small: var(--semi-border-radius-small);
+  --radius-semi-medium: var(--semi-border-radius-medium);
+  --radius-semi-large: var(--semi-border-radius-large);
+  --radius-semi-circle: var(--semi-border-radius-circle);
+  --radius-semi-full: var(--semi-border-radius-full);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -127,4 +235,4 @@
   body {
     @apply bg-background text-foreground;
   }
-} 
+}

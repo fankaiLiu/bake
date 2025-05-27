@@ -1,14 +1,8 @@
-import "./styles/globals.css"
-import { RouterProvider } from "react-router-dom"
+import { RouterProvider } from "@tanstack/react-router"
 import { router } from "./router"
-import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary"
 
 const App = () => {
-  return (
-    <GlobalErrorBoundary>
-      <RouterProvider router={router} />
-    </GlobalErrorBoundary>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App

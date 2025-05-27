@@ -7,6 +7,9 @@
 node_modules
 dist/
 
+# TanStack Router
+src/routeTree.gen.ts
+
 # IDE
 .vscode/*
 !.vscode/extensions.json
