@@ -3,7 +3,7 @@
 <html class="h-full">
 <head>
   <title>SQL Code Generator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
@@ -40,7 +40,20 @@
   <div class="flex h-[calc(100vh-57px)]">
     <!-- Left Panel -->
     <div class="w-[420px] min-w-[340px] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm p-8">
-      <h1 class="text-3xl font-semibold text-apple-blue mb-8">SQL Code Generator</h1>
+      <h1 class="text-3xl font-semibold text-apple-blue mb-4">SQL Code Generator</h1>
+      
+      <!-- Current Working Directory Display -->
+      <div id="cwdDisplay" class="mb-6 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">当前工作目录:</div>
+        <div id="cwdPath" class="text-sm font-mono text-gray-800 dark:text-gray-200 break-all">加载中...</div>
+      </div>
+
+      <!-- Status Display -->
+      <div id="statusDisplay" class="mb-6 p-3 rounded-lg hidden">
+        <div class="text-sm font-medium mb-1">状态:</div>
+        <div id="statusText" class="text-sm"></div>
+        <div id="statusTime" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></div>
+      </div>
       
       <!-- Requirements Input Section -->
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
@@ -53,7 +66,7 @@
                   class="px-6 py-2 bg-apple-blue text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
             生成代码
           </button>
-          <button id="clearBtn" onclick="clearRequirements()" 
+          <button id="clearBtn" onclick="clearAll()" 
                   class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:opacity-90 transition-opacity">
             清空
           </button>
@@ -65,7 +78,15 @@
     <div class="flex-1 p-4 overflow-y-auto">
       <div id="resultSection" class="hidden bg-gray-50 dark:bg-gray-900 rounded-xl shadow p-6">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold">生成结果</h2>
+          <div class="flex items-center gap-6">
+            <h2 class="text-xl font-semibold">生成结果</h2>
+            <!-- Summary Information -->
+            <div id="summaryInfo" class="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <span id="fileCount">文件: 0</span>
+              <span id="totalChars">总字数: 0</span>
+              <span id="generationSpeed" class="hidden">速度: 0 字符/秒</span>
+            </div>
+          </div>
           <button id="copyBtn" onclick="copyCurrentTab()" 
                   class="px-4 py-2 bg-green-500 text-white rounded-lg hover:opacity-90 transition-opacity">
             复制当前Tab
@@ -101,9 +122,184 @@
   <script>
     let currentGeneratedCode = null;
     let currentActiveTabIndex = 0;
+    let generationStartTime = null;
 
-    function clearRequirements() {
-      document.getElementById('requirements').value = '';
+    // localStorage keys
+    const STORAGE_KEYS = {
+      REQUIREMENTS: 'sql_generator_requirements',
+      GENERATED_CODE: 'sql_generator_generated_code',
+      STATUS: 'sql_generator_status'
+    };
+
+    // Status types
+    const STATUS_TYPES = {
+      GENERATE_SUCCESS: 'generate_success',
+      GENERATE_FAILED: 'generate_failed',
+      WRITE_SUCCESS: 'write_success',
+      WRITE_FAILED: 'write_failed'
+    };
+
+    // 页面加载时获取当前工作目录并恢复状态
+    async function loadCurrentWorkingDirectory() {
+      try {
+        const response = await fetch('/api/select-path', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('cwdPath').textContent = data.path;
+        } else {
+          document.getElementById('cwdPath').textContent = '获取失败';
+        }
+      } catch (error) {
+        console.error('Error loading current working directory:', error);
+        document.getElementById('cwdPath').textContent = '获取失败';
+      }
+    }
+
+    // 保存状态到localStorage
+    function saveToLocalStorage() {
+      const requirements = document.getElementById('requirements').value;
+      localStorage.setItem(STORAGE_KEYS.REQUIREMENTS, requirements);
+      
+      if (currentGeneratedCode) {
+        localStorage.setItem(STORAGE_KEYS.GENERATED_CODE, JSON.stringify(currentGeneratedCode));
+      }
+    }
+
+    // 从localStorage恢复状态
+    function restoreFromLocalStorage() {
+      // 恢复需求输入
+      const savedRequirements = localStorage.getItem(STORAGE_KEYS.REQUIREMENTS);
+      if (savedRequirements) {
+        document.getElementById('requirements').value = savedRequirements;
+      }
+
+      // 恢复生成的代码
+      const savedGeneratedCode = localStorage.getItem(STORAGE_KEYS.GENERATED_CODE);
+      if (savedGeneratedCode) {
+        try {
+          currentGeneratedCode = JSON.parse(savedGeneratedCode);
+          displayGeneratedCode(currentGeneratedCode);
+        } catch (error) {
+          console.error('Error parsing saved generated code:', error);
+        }
+      }
+
+      // 恢复状态显示
+      const savedStatus = localStorage.getItem(STORAGE_KEYS.STATUS);
+      if (savedStatus) {
+        try {
+          const statusData = JSON.parse(savedStatus);
+          displayStatus(statusData.type, statusData.message, statusData.timestamp);
+        } catch (error) {
+          console.error('Error parsing saved status:', error);
+        }
+      }
+    }
+
+    // 显示状态
+    function displayStatus(type, message, timestamp = null) {
+      const statusDisplay = document.getElementById('statusDisplay');
+      const statusText = document.getElementById('statusText');
+      const statusTime = document.getElementById('statusTime');
+      
+      let statusClass = '';
+      let statusMessage = '';
+      
+      switch (type) {
+        case STATUS_TYPES.GENERATE_SUCCESS:
+          statusClass = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+          statusMessage = '生成成功';
+          break;
+        case STATUS_TYPES.GENERATE_FAILED:
+          statusClass = 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+          statusMessage = '生成失败';
+          break;
+        case STATUS_TYPES.WRITE_SUCCESS:
+          statusClass = 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+          statusMessage = '写入成功';
+          break;
+        case STATUS_TYPES.WRITE_FAILED:
+          statusClass = 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+          statusMessage = '写入失败';
+          break;
+      }
+      
+      statusDisplay.className = `mb-6 p-3 rounded-lg ${statusClass}`;
+      statusText.textContent = `${statusMessage}: ${message}`;
+      
+      const timeToShow = timestamp || new Date().toLocaleString();
+      statusTime.textContent = timeToShow;
+      
+      statusDisplay.classList.remove('hidden');
+      
+      // 保存状态到localStorage
+      const statusData = {
+        type: type,
+        message: message,
+        timestamp: timeToShow
+      };
+      localStorage.setItem(STORAGE_KEYS.STATUS, JSON.stringify(statusData));
+    }
+
+    // 页面加载时执行
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCurrentWorkingDirectory();
+      restoreFromLocalStorage();
+    });
+
+    // 监听需求输入变化，自动保存
+    document.getElementById('requirements').addEventListener('input', function() {
+      saveToLocalStorage();
+    });
+
+    async function clearAll() {
+      const requirementsValue = document.getElementById('requirements').value;
+      const hasGeneratedCode = currentGeneratedCode !== null;
+      const hasStatus = !document.getElementById('statusDisplay').classList.contains('hidden');
+      
+      if (requirementsValue.trim() === '' && !hasGeneratedCode && !hasStatus) {
+        // 如果已经是空的，直接返回
+        return;
+      }
+      
+      const result = await Swal.fire({
+        title: '确认清空',
+        text: '确定要清空所有内容（包括需求输入、生成结果和状态）吗？',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007AFF',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消'
+      });
+      
+      if (result.isConfirmed) {
+        // 清空输入
+        document.getElementById('requirements').value = '';
+        
+        // 清空生成结果
+        currentGeneratedCode = null;
+        document.getElementById('resultSection').classList.add('hidden');
+        
+        // 清空状态显示
+        document.getElementById('statusDisplay').classList.add('hidden');
+        
+        // 清空localStorage
+        localStorage.removeItem(STORAGE_KEYS.REQUIREMENTS);
+        localStorage.removeItem(STORAGE_KEYS.GENERATED_CODE);
+        localStorage.removeItem(STORAGE_KEYS.STATUS);
+        
+        Swal.fire({
+          icon: 'success',
+          title: '已清空',
+          text: '所有内容已清空',
+          timer: 1000,
+          showConfirmButton: false
+        });
+      }
     }
 
     async function copyCurrentTab() {
@@ -170,6 +366,7 @@
 
     async function generateCode() {
       const requirements = document.getElementById('requirements').value;
+      generationStartTime = Date.now(); // 记录开始时间
       showLoading();
       try {
         const response = await fetch('/api/generate', {
@@ -183,9 +380,20 @@
         const data = await response.json();
         currentGeneratedCode = data;
         displayGeneratedCode(data);
+        
+        // 显示生成成功状态
+        displayStatus(STATUS_TYPES.GENERATE_SUCCESS, '代码生成完成');
+        
+        // 保存到localStorage
+        saveToLocalStorage();
+        
         hideLoading();
       } catch (error) {
         console.error('Error generating code:', error);
+        
+        // 显示生成失败状态
+        displayStatus(STATUS_TYPES.GENERATE_FAILED, error.message);
+        
         Swal.fire({
           icon: 'error',
           title: '生成失败',
@@ -202,11 +410,38 @@
       
       tabsDiv.innerHTML = '';
       tabContentsDiv.innerHTML = '';
-      // currentActiveTabIndex will be updated by switchTab.
-      // Resetting the global one explicitly here is fine if displayGeneratedCode is the sole entry point for new content.
       currentActiveTabIndex = 0; 
 
-      let localTabIndex = 0; // Use a local tabIndex for creation closures
+      let localTabIndex = 0;
+      let totalFiles = 0;
+      let totalChars = 0;
+
+      // 计算文件总数和字符总数
+      totalFiles = Object.keys(data.code_files).length;
+      Object.values(data.code_files).forEach(content => {
+        totalChars += content.length;
+      });
+
+      // 如果有migrations，添加到统计中
+      if (data.table_migrations && data.table_migrations.length > 0) {
+        totalFiles += 2; // 原始SQL和反向SQL
+        data.table_migrations.forEach(migration => {
+          totalChars += migration.original_sql.length + migration.reversed_sql.length;
+        });
+      }
+
+      // 更新汇总信息
+      document.getElementById('fileCount').textContent = `文件: ${totalFiles}`;
+      document.getElementById('totalChars').textContent = `总字数: ${totalChars.toLocaleString()}`;
+
+      // 计算生成速度
+      if (generationStartTime) {
+        const generationEndTime = Date.now();
+        const generationTimeSeconds = (generationEndTime - generationStartTime) / 1000;
+        const speed = Math.round(totalChars / generationTimeSeconds);
+        document.getElementById('generationSpeed').textContent = `速度: ${speed.toLocaleString()} 字符/秒`;
+        document.getElementById('generationSpeed').classList.remove('hidden');
+      }
 
       const inactiveTabBaseClasses = 'px-4 py-2 cursor-pointer rounded-t-lg';
       const inactiveTabColorClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600';
@@ -397,6 +632,11 @@
         if (!response.ok) {
           throw new Error('写入文件失败');
         }
+        
+        // 显示写入成功状态
+        const fileCount = Object.keys(currentGeneratedCode.code_files).length;
+        displayStatus(STATUS_TYPES.WRITE_SUCCESS, `成功写入 ${fileCount} 个文件`);
+        
         Swal.fire({
           icon: 'success',
           title: '写入成功',
@@ -405,6 +645,10 @@
         hideLoading();
       } catch (error) {
         console.error('Error writing files:', error);
+        
+        // 显示写入失败状态
+        displayStatus(STATUS_TYPES.WRITE_FAILED, error.message);
+        
         Swal.fire({
           icon: 'error',
           title: '写入失败',
