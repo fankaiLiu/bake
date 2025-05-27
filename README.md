@@ -1,90 +1,134 @@
-# 开发中...
+# ⚠️ Work in Progress - Not Ready for Use
 
-# Bake AI原生
+**This project is currently under active development and is not ready for production use. Many features are incomplete or unstable.**
 
-## Bake Backend
+---
 
-这是 Bake 全栈开发框架的后端部分，采用 Rust Workspace 架构。
+# Bake - AI/LLM-Friendly Full-Stack Framework
 
-### 项目结构
+[中文](README.zh.md) | **English**
+
+Bake is a modern full-stack development framework designed to be AI and LLM-friendly, featuring a Rust backend with React frontend. The project aims to provide a seamless development experience for building AI-powered applications.
+
+## Architecture
+
+- **Backend**: Rust with Workspace architecture
+- **Frontend**: React with modern tooling
+- **Design Philosophy**: AI/LLM-friendly development patterns
+
+## Backend Structure
+
+The backend is built using Rust Workspace architecture for better modularity and dependency management.
+
+### Project Structure
 
 ```
-backend/
-├── Cargo.toml          # Workspace 配置文件
-├── api/                # API 服务器
-│   ├── Cargo.toml
-│   └── src/
-│       └── main.rs     # API 服务器入口点
-├── common/             # 公共模块
-│   ├── Cargo.toml
-│   └── src/
-│       ├── lib.rs      # 模块导出
-│       ├── error.rs    # 错误类型定义
-│       ├── types.rs    # 公共类型定义
-│       └── utils.rs    # 工具函数
-├── config/             # 配置管理
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs      # 配置管理逻辑
-└── modules/                # 包管理
-    ├── Cargo.toml
-    └── src/
-        ├── lib.rs      # 包管理模块导出
-        ├── installer.rs # 包安装器
-        ├── manager.rs   # 包管理器
-        └── resolver.rs  # 依赖解析器
+crates/
+├── api/           # HTTP API server
+├── common/        # Shared types and utilities
+├── config/        # Configuration management
+├── infrastructure/ # Database and infrastructure
+└── modules/       # Package management system
 ```
 
-### 模块说明
+### Module Overview
 
 #### api
-- **作用**: API 服务器，提供 HTTP 接口
-- **依赖**: common, config
-- **入口**: `src/main.rs`
+- **Purpose**: HTTP API server providing REST endpoints
+- **Dependencies**: common, config
+- **Entry Point**: `src/main.rs`
 
 #### common
-- **作用**: 公共类型、错误处理和工具函数
-- **功能**: 
-  - 统一的错误类型定义
-  - 公共数据结构
-  - 常用工具函数
+- **Purpose**: Shared types, error handling, and utility functions
+- **Features**: 
+  - Unified error type definitions
+  - Common data structures
+  - Utility functions
 
 #### config
-- **作用**: 配置管理模块
-- **功能**: 
-  - 应用配置结构定义
-  - 配置加载和验证
+- **Purpose**: Configuration management module
+- **Features**: 
+  - Application configuration structure definitions
+  - Configuration loading and validation
+
+#### infrastructure
+- **Purpose**: Database and infrastructure components
+- **Features**: 
+  - Database connections and operations
+  - Redis integration
+  - Infrastructure utilities
 
 #### modules
-- **作用**: 包管理系统
-- **功能**: 
-  - 包安装和卸载
-  - 依赖关系解析
-  - 包注册表管理
+- **Purpose**: Package management system
+- **Features**: 
+  - Package installation and removal
+  - Dependency resolution
+  - Package registry management
 
-### 开发命令
+## Frontend Structure
+
+The frontend is built with React and modern tooling for a responsive user experience.
+
+### Frontend Features
+
+- **Framework**: React with TypeScript
+- **Build Tool**: Rsbuild for fast development
+- **UI Components**: Modern component library
+- **Routing**: File-based routing system
+- **Authentication**: Built-in auth context and protected routes
+
+## Development Commands
 
 ```bash
-# 检查所有项目
+# Check all projects
 cargo check
 
-# 运行 API 服务器
+# Run API server
 cargo run --bin bake-api
 
-# 运行测试
+# Run tests
 cargo test
 
-# 构建发布版本
+# Build release version
 cargo build --release
+
+# Frontend development (in frontend/ directory)
+cd frontend
+npm install
+npm run dev
 ```
 
-### Workspace 依赖
+## Workspace Dependencies
 
-所有公共依赖在根 `Cargo.toml` 中定义：
-- `tokio`: 异步运行时
-- `anyhow`: 错误处理
-- `thiserror`: 自定义错误类型
-- `serde`: 序列化/反序列化
-- `serde_json`: JSON 处理
-- `tracing`: 日志记录
-- `tracing-subscriber`: 日志订阅器
+All shared dependencies are defined in the root `Cargo.toml`:
+
+- `tokio`: Async runtime
+- `anyhow`: Error handling
+- `thiserror`: Custom error types
+- `serde`: Serialization/deserialization
+- `serde_json`: JSON processing
+- `tracing`: Logging framework
+- `tracing-subscriber`: Log subscriber
+
+## AI/LLM-Friendly Features
+
+This project is designed with AI and LLM development in mind:
+
+- **Clear Architecture**: Well-structured codebase for easy understanding
+- **Comprehensive Documentation**: Detailed comments and documentation
+- **Modular Design**: Loosely coupled components for easy modification
+- **Type Safety**: Strong typing with Rust and TypeScript
+- **Configuration Management**: Flexible configuration system
+- **Error Handling**: Comprehensive error handling patterns
+
+## Getting Started
+
+⚠️ **Note**: This project is not ready for use yet. Please check back later for installation and usage instructions.
+
+## Contributing
+
+This project is in early development. Contribution guidelines will be available once the project reaches a stable state.
+
+## License
+
+License information will be provided once the project is ready for public use.
