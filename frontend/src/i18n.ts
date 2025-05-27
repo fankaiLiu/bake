@@ -83,7 +83,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'zh', // 默认语言设为中文
+    lng: localStorage.getItem('preferred-language') || 'zh', // 从localStorage读取首选语言，默认为中文
     fallbackLng: 'en', // 备用语言
     
     interpolation: {
