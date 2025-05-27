@@ -28,7 +28,7 @@ interface AuthContextType {
   isLoading: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>(null as any)
 
 /**
  * Bake 框架认证提供者组件
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  */
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth 必须在 AuthProvider 内部使用')
   }
   return context

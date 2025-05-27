@@ -6,4 +6,22 @@ export default defineConfig({
   html: {
     title: 'bake',
   },
+  server: {
+    publicDir: {
+      name: '../locales',
+      copyOnBuild: true
+    }
+  },
+  tools: {
+    rspack: {
+      module: {
+        rules: [
+          {
+            test: /\.(yml|yaml)$/,
+            use: 'raw-loader',
+          },
+        ],
+      },
+    },
+  },
 });

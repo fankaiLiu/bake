@@ -1,18 +1,19 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { IconBrandApple, IconBrandGoogle, IconLoader2, IconAlertTriangle } from "@tabler/icons-react"
-import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/contexts/AuthContext"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { cn } from "@/lib/utils"
+import { 
+  IconAlertTriangle, 
+  IconLoader2, 
+  IconBrandApple, 
+  IconBrandGoogle 
+} from "@tabler/icons-react"
 
 /**
  * BakeLoginForm - AI/LLM 友好的登录表单组件
@@ -23,14 +24,17 @@ import { useAuth } from "@/contexts/AuthContext"
  * - 完整的状态管理和错误处理
  * - 响应式设计和加载状态
  * - 自动路由重定向
+ * - 国际化支持
  * 
  * 用法:
- * <BakeLoginForm className="custom-styles" />
+ * <LoginForm className="custom-styles" />
  */
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { t } = useTranslation()
+  
   // 状态管理
   const [formData, setFormData] = useState({
     email: "",
@@ -69,7 +73,7 @@ export function LoginForm({
       await login(formData.email, formData.password)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败，请检查邮箱和密码")
+      setError(err instanceof Error ? err.message : t("auth.login.errors.login_failed"))
     } finally {
       setIsLoading(false)
     }
@@ -91,9 +95,9 @@ export function LoginForm({
       console.log(`Initiating ${provider} login...`)
       
       // 暂时显示提示信息
-      setError(`${provider === 'apple' ? 'Apple' : 'Google'} 登录功能正在开发中`)
+      setError(t(`auth.login.errors.${provider}_development`))
     } catch (err) {
-      setError(`${provider === 'apple' ? 'Apple' : 'Google'} 登录失败`)
+      setError(t(`auth.login.errors.${provider}_failed`))
     } finally {
       setIsLoading(false)
     }
@@ -101,13 +105,18 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      {/* 语言切换器 */}
+      <div className="flex justify-end">
+        <LanguageSwitcher />
+      </div>
+      
       <Card className="shadow-lg border-border/50">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-            欢迎回到 Bake
+            {t("auth.login.title")}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            使用您的账户登录，开始 AI 友好的开发之旅
+            {t("auth.login.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -134,7 +143,7 @@ export function LoginForm({
                 ) : (
                   <IconBrandApple className="h-5 w-5" />
                 )}
-                <span className="ml-2">使用 Apple 登录</span>
+                <span className="ml-2">{t("auth.login.apple_login")}</span>
               </Button>
               
               <Button 
@@ -149,7 +158,7 @@ export function LoginForm({
                 ) : (
                   <IconBrandGoogle className="h-5 w-5" />
                 )}
-                <span className="ml-2">使用 Google 登录</span>
+                <span className="ml-2">{t("auth.login.google_login")}</span>
               </Button>
             </div>
 
@@ -160,7 +169,7 @@ export function LoginForm({
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  或使用邮箱登录
+                  {t("auth.login.or_email")}
                 </span>
               </div>
             </div>
@@ -169,12 +178,12 @@ export function LoginForm({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  邮箱地址
+                  {t("auth.login.email")}
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="example@bake.dev"
+                  placeholder={t("auth.login.email_placeholder")}
                   value={formData.email}
                   onChange={handleInputChange}
                   required
@@ -186,19 +195,24 @@ export function LoginForm({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium">
-                    密码
+                    {t("auth.login.password")}
                   </Label>
                   <a
                     href="#"
                     className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
                   >
-                    忘记密码？
+                    <a
+                    href="#"
+                    className="text-sm text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
+                  >
+                    {t("auth.login.forgot_password")}
+                  </a>
                   </a>
                 </div>
                 <Input 
                   id="password" 
                   type="password" 
-                  placeholder="请输入密码"
+                  placeholder={t("auth.login.password_placeholder")}
                   value={formData.password}
                   onChange={handleInputChange}
                   required
@@ -215,22 +229,22 @@ export function LoginForm({
                 {isLoading ? (
                   <>
                     <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-                    登录中...
+                    {t("common.loading")}
                   </>
                 ) : (
-                  "登录"
+                  t("auth.login.submit")
                 )}
               </Button>
             </div>
 
             {/* 注册链接 */}
             <div className="text-center text-sm text-muted-foreground">
-              还没有账户？{" "}
+              {t("auth.login.no_account")}{" "}
               <a 
                 href="#" 
                 className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium transition-colors"
               >
-                立即注册
+                {t("auth.login.register")}
               </a>
             </div>
           </form>
@@ -244,14 +258,14 @@ export function LoginForm({
           href="#" 
           className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
         >
-          服务条款
+          {t("auth.login.terms")}
         </a>{" "}
         和{" "}
         <a 
           href="#" 
           className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
         >
-          隐私政策
+          {t("auth.login.privacy")}
         </a>
         。
       </div>
