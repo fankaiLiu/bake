@@ -1,8 +1,12 @@
-# Bake Backend
+# 开发中...
+
+# Bake AI原生
+
+## Bake Backend
 
 这是 Bake 全栈开发框架的后端部分，采用 Rust Workspace 架构。
 
-## 项目结构
+### 项目结构
 
 ```
 backend/
@@ -31,34 +35,34 @@ backend/
         └── resolver.rs  # 依赖解析器
 ```
 
-## 模块说明
+### 模块说明
 
-### api
+#### api
 - **作用**: API 服务器，提供 HTTP 接口
 - **依赖**: common, config
 - **入口**: `src/main.rs`
 
-### common
+#### common
 - **作用**: 公共类型、错误处理和工具函数
 - **功能**: 
   - 统一的错误类型定义
   - 公共数据结构
   - 常用工具函数
 
-### config
+#### config
 - **作用**: 配置管理模块
 - **功能**: 
   - 应用配置结构定义
   - 配置加载和验证
 
-### modules
+#### modules
 - **作用**: 包管理系统
 - **功能**: 
   - 包安装和卸载
   - 依赖关系解析
   - 包注册表管理
 
-## 开发命令
+### 开发命令
 
 ```bash
 # 检查所有项目
@@ -74,7 +78,7 @@ cargo test
 cargo build --release
 ```
 
-## Workspace 依赖
+### Workspace 依赖
 
 所有公共依赖在根 `Cargo.toml` 中定义：
 - `tokio`: 异步运行时

@@ -1,12 +1,6 @@
 [workspace]
+members = ["crates/*"]
 resolver = "2"
-members = [
-    "common",
-    "api",
-    "config",
-    "modules",
-    "infrastructure",
-]
 
 [workspace.dependencies]
 # 异步运行时
