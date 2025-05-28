@@ -28,7 +28,7 @@ crates/
 ├── common/        # 共享类型和工具
 ├── config/        # 配置管理
 ├── infrastructure/ # 数据库和基础设施
-└── modules/       # 包管理系统
+└── platform_services/       # 包管理系统
 ```
 
 ### 模块说明
@@ -58,7 +58,7 @@ crates/
   - Redis 集成
   - 基础设施工具
 
-#### modules
+#### platform_services
 - **作用**: 包管理系统
 - **功能**: 
   - 包安装和卸载

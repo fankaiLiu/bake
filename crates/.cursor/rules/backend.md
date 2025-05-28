@@ -37,5 +37,5 @@ crates/
   common/       # 共享类型和工具
   config/       # 配置管理
   infrastructure/  # 基础设施（数据库、Redis等）
-  modules/      # 业务模块
+  platform_services/      # 业务模块
 ```

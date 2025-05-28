@@ -1,5 +1,5 @@
 [package]
-name = "bake-modules"
+name = "bake-platform-services"
 version = "0.1.0"
 edition = "2021"
 

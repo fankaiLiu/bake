@@ -28,7 +28,7 @@ crates/
 ├── common/        # Shared types and utilities
 ├── config/        # Configuration management
 ├── infrastructure/ # Database and infrastructure
-└── modules/       # Package management system
+└── platform_services/       # Package management system
 ```
 
 ### Module Overview
@@ -58,7 +58,7 @@ crates/
   - Redis integration
   - Infrastructure utilities
 
-#### modules
+#### platform_services
 - **Purpose**: Package management system
 - **Features**: 
   - Package installation and removal

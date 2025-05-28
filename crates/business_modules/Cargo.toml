@@ -1,0 +1,16 @@
+[package]
+name = "bake-business-modules"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 使用 workspace 依赖
+tokio = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+
+# 内部依赖
+bake-common = { path = "../common" }
+bake-platform-services = { path = "../platform_services" }
