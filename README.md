@@ -25,10 +25,11 @@ The backend is built using Rust Workspace architecture for better modularity and
 ```
 crates/
 ├── api/           # HTTP API server
+├── business_modules/        # Main business logic development area
 ├── common/        # Shared types and utilities
 ├── config/        # Configuration management
 ├── infrastructure/ # Database and infrastructure
-└── platform_services/       # Package management system
+└── platform_services/       # Platform engineering (community maintained)
 ```
 
 ### Module Overview
@@ -37,6 +38,13 @@ crates/
 - **Purpose**: HTTP API server providing REST endpoints
 - **Dependencies**: common, config
 - **Entry Point**: `src/main.rs`
+
+#### business_modules
+- **Purpose**: Main business logic development area for custom application features
+- **Features**: 
+  - Primary development workspace after git clone
+  - Custom business logic implementation
+  - Application-specific modules
 
 #### common
 - **Purpose**: Shared types, error handling, and utility functions
@@ -59,11 +67,13 @@ crates/
   - Infrastructure utilities
 
 #### platform_services
-- **Purpose**: Package management system
+- **Purpose**: Platform engineering module (community maintained)
 - **Features**: 
-  - Package installation and removal
-  - Dependency resolution
-  - Package registry management
+  - System management and administration
+  - User management system
+  - Role-based access control (RBAC)
+  - Permission management
+  - Core platform functionalities
 
 ## Frontend Structure
 
