@@ -1,0 +1,32 @@
+{
+  "translation": {
+    "Welcome back to Bake": "Welcome back to Bake",
+    "Sign in with your account to start your AI-friendly development journey": "Sign in with your account to start your AI-friendly development journey",
+    "Sign in with Apple": "Sign in with Apple",
+    "Sign in with Google": "Sign in with Google",
+    "Or sign in with email": "Or sign in with email",
+    "Email address": "Email address",
+    "Password": "Password",
+    "Forgot password?": "Forgot password?",
+    "Sign in": "Sign in",
+    "Loading...": "Loading...",
+    "Don't have an account?": "Don't have an account?",
+    "Sign up now": "Sign up now",
+    "By continuing, you agree to our": "By continuing, you agree to our",
+    "Terms of Service": "Terms of Service",
+    "and": "and",
+    "Privacy Policy": "Privacy Policy",
+    "Email and password cannot be empty": "Email and password cannot be empty",
+    "Password must be at least 6 characters long": "Password must be at least 6 characters long",
+    "Login successful": "Login successful",
+    "Login demo completed": "Login demo completed",
+    "Login failed, please check your email and password": "Login failed, please check your email and password",
+    "apple login is under development": "Apple login is under development",
+    "google login is under development": "Google login is under development",
+    "apple login failed": "Apple login failed",
+    "google login failed": "Google login failed",
+    "Language": "Language",
+    "Chinese": "中文",
+    "English": "English"
+  }
+}
